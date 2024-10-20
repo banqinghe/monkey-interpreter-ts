@@ -1,0 +1,14 @@
+{
+    "compilerOptions": {
+      "target": "ES2023",
+      "lib": ["ES2023"],
+      "moduleResolution": "Bundler",
+      "module": "ESNext",
+      "strict": true,
+      "outDir": "./build",
+      "declaration": true,
+      "emitDeclarationOnly": true,
+    },
+    "include": ["**/*.ts", "eslint.config.js"],
+    "exclude": ["node_modules"]
+}
