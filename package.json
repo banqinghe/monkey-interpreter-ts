@@ -5,6 +5,7 @@
     "main": "index.js",
     "type": "module",
     "scripts": {
+        "repl": "tsx src/repl.ts",
         "test": "tsx --test"
     },
     "keywords": [],
