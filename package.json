@@ -5,7 +5,7 @@
     "main": "index.js",
     "type": "module",
     "scripts": {
-        "test": "tsx ./test/all.test.ts"
+        "test": "tsx --test"
     },
     "keywords": [],
     "author": "banqinghe",

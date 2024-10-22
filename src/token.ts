@@ -3,22 +3,22 @@ export type TokenType =
     | 'EOF'
     | 'IDENT'
     | 'INT'
-    | '='
-    | '+'
-    | '-'
-    | '*'
-    | '/'
-    | '!'
-    | '<'
-    | '>'
-    | '=='
-    | '!='
-    | ','
-    | ';'
-    | '('
-    | ')'
-    | '{'
-    | '}'
+    | 'ASSIGN'
+    | 'PLUS'
+    | 'MINUS'
+    | 'ASTERISK'
+    | 'SLASH'
+    | 'BANG'
+    | 'LT'
+    | 'GT'
+    | 'EQ'
+    | 'NOT_EQ'
+    | 'COMMA'
+    | 'SEMICOLON'
+    | 'LPAREN'
+    | 'RPAREN'
+    | 'LBRACE'
+    | 'RBRACE'
     | 'FUNCTION'
     | 'LET'
     | 'TRUE'
@@ -47,25 +47,25 @@ export default class Token {
     static INT: TokenType = 'INT';
 
     // operators
-    static ASSIGN: TokenType = '=';
-    static PLUS: TokenType = '+';
-    static MINUS: TokenType = '-';
-    static BANG: TokenType = '!';
-    static ASTERISK: TokenType = '*';
-    static SLASH: TokenType = '/';
-    static LT: TokenType = '<';
-    static GT: TokenType = '>';
-    static EQ: TokenType = '==';
-    static NOT_EQ: TokenType = '!=';
+    static ASSIGN: TokenType = 'ASSIGN';
+    static PLUS: TokenType = 'PLUS';
+    static MINUS: TokenType = 'MINUS';
+    static BANG: TokenType = 'BANG';
+    static ASTERISK: TokenType = 'ASTERISK';
+    static SLASH: TokenType = 'SLASH';
+    static LT: TokenType = 'LT';
+    static GT: TokenType = 'GT';
+    static EQ: TokenType = 'EQ';
+    static NOT_EQ: TokenType = 'NOT_EQ';
 
     // delimiters
-    static COMMA: TokenType = ',';
-    static SEMICOLON: TokenType = ';';
+    static COMMA: TokenType = 'COMMA';
+    static SEMICOLON: TokenType = 'SEMICOLON';
 
-    static LPAREN: TokenType = '(';
-    static RPAREN: TokenType = ')';
-    static LBRACE: TokenType = '{';
-    static RBRACE: TokenType = '}';
+    static LPAREN: TokenType = 'LPAREN';
+    static RPAREN: TokenType = 'RPAREN';
+    static LBRACE: TokenType = 'LBRACE';
+    static RBRACE: TokenType = 'RBRACE';
 
     // keywords
     static FUNCTION: TokenType = 'FUNCTION';
