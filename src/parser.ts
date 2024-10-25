@@ -1,16 +1,47 @@
 import Lexer from './lexer';
 import Token, { TokenType } from './token';
-import { Identifier, LetStatement, Program, Statement } from './ast';
+import {
+    Expression,
+    ExpressionStatement,
+    Identifier,
+    IntegerLiteral,
+    LetStatement,
+    Program,
+    ReturnStatement,
+    Statement,
+} from './ast';
+
+type prefixParseFn = () => Expression;
+type infixParseFn = (left: Expression) => Expression;
+
+// 优先级
+const LOWEST = 0;
+const EQUALS = 1; // ==
+const LESSGREATER = 2; // > or <
+const SUM = 3; // +
+const PRODUCT = 4; // *
+const PREFIX = 5; // -x or !x
+const CALL = 6; // myFunction(x)
 
 export default class Parser {
     curToken!: Token;
     peekToken!: Token;
+
     lexer: Lexer;
     errors: string[];
+
+    prefixParseFns: Map<TokenType, prefixParseFn>;
+    infixParseFns: Map<TokenType, infixParseFn>;
 
     constructor(lexer: Lexer) {
         this.lexer = lexer;
         this.errors = [];
+
+        this.prefixParseFns = new Map([
+            [Token.IDENT, this.parseIdentifier.bind(this)],
+            [Token.INT, this.parseIntegerLiteral.bind(this)],
+        ]);
+        this.infixParseFns = new Map();
 
         this.nextToken();
         this.nextToken();
@@ -45,6 +76,14 @@ export default class Parser {
         this.errors.push(`expected next token to be ${t}, got ${this.peekToken.type} instead`);
     }
 
+    registerPrefix(tokenType: TokenType, fn: prefixParseFn) {
+        this.prefixParseFns.set(tokenType, fn);
+    }
+
+    registerInfix(tokenType: TokenType, fn: infixParseFn) {
+        this.infixParseFns.set(tokenType, fn);
+    }
+
     parseProgram(): Program {
         const program = new Program();
 
@@ -63,8 +102,10 @@ export default class Parser {
         switch (this.curToken.type) {
             case Token.LET:
                 return this.parseLetStatement();
+            case Token.RETURN:
+                return this.parseReturnStatement();
             default:
-                return null;
+                return this.parseExpressionStatement();
         }
     }
 
@@ -74,7 +115,10 @@ export default class Parser {
         if (!this.expectPeek(Token.IDENT)) {
             return null;
         }
-        statement.name = new Identifier(this.curToken, this.curToken.literal);
+        statement.name = new Identifier({
+            token: this.curToken,
+            value: this.curToken.literal,
+        });
 
         if (!this.expectPeek(Token.ASSIGN)) {
             return null;
@@ -85,5 +129,54 @@ export default class Parser {
         }
 
         return statement;
+    }
+
+    parseReturnStatement(): Statement | null {
+        const statement = new ReturnStatement();
+
+        this.nextToken();
+
+        // TODO: parse Expression
+        while (!this.curTokenIs(Token.SEMICOLON)) {
+            this.nextToken();
+        }
+
+        return statement;
+    }
+
+    parseExpressionStatement(): Statement | null {
+        const statement = new ExpressionStatement({
+            token: this.curToken,
+            expression: this.parseExpression(LOWEST),
+        });
+
+        if (this.peekTokenIs(Token.SEMICOLON)) {
+            this.nextToken();
+        }
+
+        return statement;
+    }
+
+    parseExpression(precedence: number) {
+        const prefix = this.prefixParseFns.get(this.curToken.type);
+        if (!prefix) {
+            return;
+        }
+        return prefix();
+    }
+
+    parseIdentifier(): Expression {
+        return new Identifier({
+            token: this.curToken,
+            value: this.curToken.literal,
+        });
+    }
+
+    parseIntegerLiteral(): Expression {
+        const literal = new IntegerLiteral({
+            token: this.curToken,
+            value: parseInt(this.curToken.literal),
+        });
+        return literal;
     }
 }
