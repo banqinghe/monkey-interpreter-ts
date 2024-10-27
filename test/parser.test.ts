@@ -1,6 +1,14 @@
 import assert from 'node:assert';
 import { test, describe } from 'node:test';
-import { Expression, ExpressionStatement, Identifier, IntegerLiteral, LetStatement, PrefixExpression } from '../src/ast';
+import {
+    Expression,
+    ExpressionStatement,
+    Identifier,
+    InfixExpression,
+    IntegerLiteral,
+    LetStatement,
+    PrefixExpression,
+} from '../src/ast';
 import Lexer from '../src/lexer';
 import Parser from '../src/parser';
 
@@ -120,6 +128,62 @@ describe('parser', () => {
             assert.strictEqual(expression.operator, t.operator);
 
             testIntegerLiteral(expression.right!, t.integerValue);
+        }
+    });
+
+    test('infix expressions - integer', () => {
+        const tests = [
+            { input: '10086 + 5', leftValue: 10086, operator: '+', rightValue: 5 },
+            { input: '5 - 5', leftValue: 5, operator: '-', rightValue: 5 },
+            { input: '5 * 5', leftValue: 5, operator: '*', rightValue: 5 },
+            { input: '5 / 5', leftValue: 5, operator: '/', rightValue: 5 },
+            { input: '5 > 5', leftValue: 5, operator: '>', rightValue: 5 },
+            { input: '5 < 5', leftValue: 5, operator: '<', rightValue: 5 },
+            { input: '5 == 5', leftValue: 5, operator: '==', rightValue: 5 },
+            { input: '5 != 5', leftValue: 5, operator: '!=', rightValue: 5 },
+        ];
+
+        for (const t of tests) {
+            const lexer = new Lexer(t.input);
+            const parser = new Parser(lexer);
+            const program = parser.parseProgram();
+            checkParserErrors(parser);
+
+            assert.strictEqual(program.statements.length, 1);
+
+            const statement = program.statements[0];
+            assert.ok(statement instanceof ExpressionStatement);
+            const expression = (statement as ExpressionStatement).expression;
+            assert.ok(expression instanceof InfixExpression);
+            assert.strictEqual((expression as InfixExpression).operator, t.operator);
+            testIntegerLiteral((expression as InfixExpression).left, t.leftValue);
+            testIntegerLiteral((expression as InfixExpression).right!, t.rightValue);
+        }
+    });
+
+    test('operator precedence', () => {
+        const tests = [
+            { input: '-a * b', expected: '((-a) * b)' },
+            { input: '!-a', expected: '(!(-a))' },
+            { input: 'a + b + c', expected: '((a + b) + c)' },
+            { input: 'a + b - c', expected: '((a + b) - c)' },
+            { input: 'a * b * c', expected: '((a * b) * c)' },
+            { input: 'a * b / c', expected: '((a * b) / c)' },
+            { input: 'a + b / c', expected: '(a + (b / c))' },
+            { input: 'a + b * c + d / e - f', expected: '(((a + (b * c)) + (d / e)) - f)' },
+            { input: '3 + 4; -5 * 5', expected: '(3 + 4)\n((-5) * 5)' },
+            { input: '5 > 4 == 3 < 4', expected: '((5 > 4) == (3 < 4))' },
+            { input: '5 < 4 != 3 > 4', expected: '((5 < 4) != (3 > 4))' },
+            { input: '3 + 4 * 5 == 3 * 1 + 4 * 5', expected: '((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))' },
+        ];
+
+        for (const t of tests) {
+            const lexer = new Lexer(t.input);
+            const parser = new Parser(lexer);
+            const program = parser.parseProgram();
+            checkParserErrors(parser);
+            const actual = program.toString();
+            assert.strictEqual(actual, t.expected);
         }
     });
 });

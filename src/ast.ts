@@ -127,6 +127,34 @@ export class PrefixExpression implements Expression {
     }
 }
 
+export class InfixExpression implements Expression {
+    token: Token;
+    left: Expression;
+    operator: string;
+    right?: Expression;
+
+    constructor({ token, left, operator, right }: { token: Token; left: Expression; operator: string; right?: Expression }) {
+        this.token = token;
+        this.left = left;
+        this.operator = operator;
+        this.right = right;
+    }
+
+    expressionNode() {};
+
+    tokenLiteral() {
+        return this.token.literal;
+    }
+
+    toString() {
+        if (this.right) {
+            return `(${this.left.toString()} ${this.operator} ${this.right.toString()})`;
+        } else {
+            return '[Invalid InfixExpression toString]';
+        }
+    }
+}
+
 export class ReturnStatement implements Statement {
     token: Token;
     returnValue?: Expression;
