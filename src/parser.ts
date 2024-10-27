@@ -1,10 +1,12 @@
 import Lexer from './lexer';
 import Token, { TokenType } from './token';
 import {
+    BlockStatement,
     BooleanLiteral,
     Expression,
     ExpressionStatement,
     Identifier,
+    IfExpression,
     InfixExpression,
     IntegerLiteral,
     LetStatement,
@@ -61,6 +63,7 @@ export default class Parser {
             [Token.BANG, this.parsePrefixExpression.bind(this)],
             [Token.MINUS, this.parsePrefixExpression.bind(this)],
             [Token.LPAREN, this.parseGroupedExpression.bind(this)],
+            [Token.IF, this.parseIfExpression.bind(this)],
         ]);
         this.infixParseFns = new Map([
             [Token.PLUS, this.parseInfixExpression.bind(this)],
@@ -132,7 +135,7 @@ export default class Parser {
         return program;
     }
 
-    parseStatement(): Statement | null {
+    parseStatement(): Statement {
         switch (this.curToken.type) {
             case Token.LET:
                 return this.parseLetStatement();
@@ -143,11 +146,11 @@ export default class Parser {
         }
     }
 
-    parseLetStatement(): Statement | null {
+    parseLetStatement(): Statement {
         const statement = new LetStatement();
 
         if (!this.expectPeek(Token.IDENT)) {
-            return null;
+            throw new Error(`parseLetStatement: got ${this.peekToken} instead of IDENT`);
         }
         statement.name = new Identifier({
             token: this.curToken,
@@ -155,7 +158,7 @@ export default class Parser {
         });
 
         if (!this.expectPeek(Token.ASSIGN)) {
-            return null;
+            throw new Error(`parseLetStatement: got ${this.peekToken} instead of ASSIGN`);
         }
         // TODO: parse Expression
         while (!this.curTokenIs(Token.SEMICOLON)) {
@@ -165,7 +168,7 @@ export default class Parser {
         return statement;
     }
 
-    parseReturnStatement(): Statement | null {
+    parseReturnStatement(): Statement {
         const statement = new ReturnStatement();
 
         this.nextToken();
@@ -178,7 +181,7 @@ export default class Parser {
         return statement;
     }
 
-    parseExpressionStatement(): Statement | null {
+    parseExpressionStatement(): Statement {
         const statement = new ExpressionStatement({
             token: this.curToken,
             expression: this.parseExpression(LOWEST),
@@ -189,6 +192,23 @@ export default class Parser {
         }
 
         return statement;
+    }
+
+    parseBlockStatement(): BlockStatement {
+        const blockToken = this.curToken;
+        this.nextToken();
+
+        const blockStatements = [];
+
+        while (!this.curTokenIs(Token.RBRACE) && !this.curTokenIs(Token.EOF)) {
+            blockStatements.push(this.parseStatement());
+            this.nextToken();
+        }
+
+        return new BlockStatement({
+            token: blockToken,
+            statements: blockStatements,
+        });
     }
 
     parseExpression(precedence: number): Expression {
@@ -265,5 +285,44 @@ export default class Parser {
         }
 
         return expression;
+    }
+
+    parseIfExpression(): Expression {
+        const ifToken = this.curToken;
+
+        if (!this.expectPeek(Token.LPAREN)) {
+            this.peekError(Token.LPAREN);
+        }
+
+        // if (x < y)
+        //    ^
+        this.nextToken();
+
+        const condition = this.parseExpression(LOWEST);
+
+        if (!this.expectPeek(Token.RPAREN)) {
+            throw new Error(`parseIfExpression: got ${this.peekToken} instead of RPAREN`);
+        }
+        if (!this.expectPeek(Token.LBRACE)) {
+            throw new Error(`parseIfExpression - if: got ${this.peekToken} instead of LBRACE`);
+        }
+
+        const consequence = this.parseBlockStatement();
+        let alternative = undefined;
+
+        if (this.peekTokenIs(Token.ELSE)) {
+            this.nextToken();
+            if (!this.expectPeek(Token.LBRACE)) {
+                throw new Error(`parseIfExpression - else: got ${this.peekToken} instead of LBRACE`);
+            }
+            alternative = this.parseBlockStatement();
+        }
+
+        return new IfExpression({
+            token: ifToken,
+            condition,
+            consequence,
+            alternative,
+        });
     }
 }

@@ -171,6 +171,39 @@ export class InfixExpression implements Expression {
     }
 }
 
+export class IfExpression implements Expression {
+    token: Token;
+    condition: Expression;
+    consequence: BlockStatement;
+    alternative?: BlockStatement;
+
+    constructor({ token, condition, consequence, alternative }: {
+        token: Token;
+        condition: Expression;
+        consequence: BlockStatement;
+        alternative?: BlockStatement;
+    }) {
+        this.token = token;
+        this.condition = condition;
+        this.consequence = consequence;
+        this.alternative = alternative;
+    }
+
+    expressionNode() {}
+
+    tokenLiteral() {
+        return this.token.literal;
+    }
+
+    toString() {
+        let result = `${this.tokenLiteral()} (${this.condition.toString()}) ${this.consequence.toString()}`;
+        if (this.alternative) {
+            result += `else ${this.alternative.toString()}`;
+        }
+        return result;
+    }
+}
+
 export class ReturnStatement implements Statement {
     token: Token;
     returnValue?: Expression;
@@ -212,5 +245,25 @@ export class ExpressionStatement implements Statement {
 
     toString() {
         return this.expression?.toString() || '[Invalid ExpressionStatement toString]';
+    }
+}
+
+export class BlockStatement implements Statement {
+    token: Token;
+    statements: Statement[];
+
+    constructor({ token, statements }: { token: Token; statements: Statement[] }) {
+        this.token = token;
+        this.statements = statements;
+    }
+
+    statementNode() {};
+
+    tokenLiteral() {
+        return this.token.literal;
+    }
+
+    toString() {
+        return this.statements.map(statement => statement.toString()).join('\n');
     }
 }

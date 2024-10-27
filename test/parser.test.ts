@@ -5,6 +5,7 @@ import {
     Expression,
     ExpressionStatement,
     Identifier,
+    IfExpression,
     InfixExpression,
     IntegerLiteral,
     LetStatement,
@@ -214,6 +215,56 @@ describe('parser', () => {
             const actual = program.toString();
             assert.strictEqual(actual, t.expected);
         }
+    });
+
+    test('if expression', () => {
+        const input = 'if (x < y) { x }';
+        const lexer = new Lexer(input);
+        const parser = new Parser(lexer);
+        const program = parser.parseProgram();
+        checkParserErrors(parser);
+        assert.strictEqual(program.statements.length, 1);
+        assert.ok(program.statements[0] instanceof ExpressionStatement);
+        const statement = program.statements[0] as ExpressionStatement;
+
+        assert.ok(statement.expression instanceof IfExpression);
+        const expression = statement.expression as IfExpression;
+        testInfixExpression(expression.condition, 'x', '<', 'y');
+        assert.strictEqual(expression.consequence.statements.length, 1);
+        const consequence = expression.consequence.statements[0];
+        assert.ok(consequence instanceof ExpressionStatement);
+        const consequenceExpression = (consequence as ExpressionStatement).expression;
+        assert.ok(consequenceExpression instanceof Identifier);
+        assert.strictEqual((consequenceExpression as Identifier).value, 'x');
+        assert.strictEqual(expression.alternative, undefined);
+    });
+
+    test('if else expression', () => {
+        const input = 'if (x < y) { x } else { y }';
+        const lexer = new Lexer(input);
+        const parser = new Parser(lexer);
+        const program = parser.parseProgram();
+        checkParserErrors(parser);
+        assert.strictEqual(program.statements.length, 1);
+        assert.ok(program.statements[0] instanceof ExpressionStatement);
+        const statement = program.statements[0] as ExpressionStatement;
+
+        assert.ok(statement.expression instanceof IfExpression);
+        const expression = statement.expression as IfExpression;
+        testInfixExpression(expression.condition, 'x', '<', 'y');
+        assert.strictEqual(expression.consequence.statements.length, 1);
+
+        const consequence = expression.consequence.statements[0];
+        assert.ok(consequence instanceof ExpressionStatement);
+        const consequenceExpression = (consequence as ExpressionStatement).expression;
+        assert.ok(consequenceExpression instanceof Identifier);
+        assert.strictEqual((consequenceExpression as Identifier).value, 'x');
+
+        const alternative = expression.alternative?.statements[0];
+        assert.ok(alternative instanceof ExpressionStatement);
+        const alternativeExpression = (alternative as ExpressionStatement).expression;
+        assert.ok(alternativeExpression instanceof Identifier);
+        assert.strictEqual((alternativeExpression as Identifier).value, 'y');
     });
 });
 
