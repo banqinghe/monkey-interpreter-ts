@@ -151,9 +151,9 @@ export class InfixExpression implements Expression {
     token: Token;
     left: Expression;
     operator: string;
-    right?: Expression;
+    right: Expression;
 
-    constructor({ token, left, operator, right }: { token: Token; left: Expression; operator: string; right?: Expression }) {
+    constructor({ token, left, operator, right }: { token: Token; left: Expression; operator: string; right: Expression }) {
         this.token = token;
         this.left = left;
         this.operator = operator;
@@ -167,11 +167,7 @@ export class InfixExpression implements Expression {
     }
 
     toString() {
-        if (this.right) {
-            return `(${this.left.toString()} ${this.operator} ${this.right.toString()})`;
-        } else {
-            return '[Invalid InfixExpression toString]';
-        }
+        return `(${this.left.toString()} ${this.operator} ${this.right.toString()})`;
     }
 }
 

@@ -195,6 +195,15 @@ describe('parser', () => {
             { input: 'false', expected: 'false' },
             { input: '3 > 5 == false', expected: '((3 > 5) == false)' },
             { input: '3 < 5 == true', expected: '((3 < 5) == true)' },
+            { input: '1 + (2 + 3) + 4', expected: '((1 + (2 + 3)) + 4)' },
+            { input: '(5 + 5) * 2', expected: '((5 + 5) * 2)' },
+            { input: '2 / (5 + 5)', expected: '(2 / (5 + 5))' },
+            { input: '(5 + 5) * 2 * (5 + 5)', expected: '(((5 + 5) * 2) * (5 + 5))' },
+            { input: '-(5 + 5)', expected: '(-(5 + 5))' },
+            { input: '!(true == true)', expected: '(!(true == true))' },
+            // { input: 'a + add(b * c) + d', expected: '((a + add((b * c))) + d)' },
+            // { input: 'add(a, b, 1, 2 * 3, 4 + 5, add(6, 7 * 8))', expected: 'add(a, b, 1, (2 * 3), (4 + 5), add(6, (7 * 8)))' },
+            // { input: 'add(a + b + c * d / f + g)', expected: 'add((((a + b) + ((c * d) / f)) + g))' },
         ];
 
         for (const t of tests) {

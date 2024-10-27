@@ -60,6 +60,7 @@ export default class Parser {
             [Token.FALSE, this.parseBooleanLiteral.bind(this)],
             [Token.BANG, this.parsePrefixExpression.bind(this)],
             [Token.MINUS, this.parsePrefixExpression.bind(this)],
+            [Token.LPAREN, this.parseGroupedExpression.bind(this)],
         ]);
         this.infixParseFns = new Map([
             [Token.PLUS, this.parseInfixExpression.bind(this)],
@@ -190,11 +191,11 @@ export default class Parser {
         return statement;
     }
 
-    parseExpression(precedence: number) {
+    parseExpression(precedence: number): Expression {
         const prefix = this.prefixParseFns.get(this.curToken.type);
         if (!prefix) {
             this.noPrefixParseFnError(this.curToken.type);
-            return;
+            throw new Error(`parseExpression: no prefixFn for token ${this.curToken.type}`);
         }
         let leftExp = prefix();
 
@@ -252,5 +253,17 @@ export default class Parser {
             operator: token.literal,
             right: this.parseExpression(precedence),
         });
+    }
+
+    parseGroupedExpression(): Expression {
+        this.nextToken();
+
+        const expression = this.parseExpression(LOWEST);
+
+        if (!this.expectPeek(Token.RPAREN)) {
+            this.peekError(Token.RPAREN);
+        }
+
+        return expression;
     }
 }
