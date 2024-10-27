@@ -1,6 +1,7 @@
 import assert from 'node:assert';
 import { test, describe } from 'node:test';
 import {
+    BooleanLiteral,
     Expression,
     ExpressionStatement,
     Identifier,
@@ -97,18 +98,29 @@ describe('parser', () => {
         assert.strictEqual((statement.expression as IntegerLiteral).value, 5);
     });
 
+    test('boolean literal expression', () => {
+        const input = `
+            true;
+            false;
+        `;
+
+        const lexer = new Lexer(input);
+        const parser = new Parser(lexer);
+        const program = parser.parseProgram();
+        checkParserErrors(parser);
+
+        assert.strictEqual(program.statements.length, 2);
+
+        testBooleanLiteral((program.statements[0] as ExpressionStatement).expression!, true);
+        testBooleanLiteral((program.statements[1] as ExpressionStatement).expression!, false);
+    });
+
     test('prefix expressions', () => {
         const tests = [
-            {
-                input: '!5',
-                operator: '!',
-                integerValue: 5,
-            },
-            {
-                input: '-15',
-                operator: '-',
-                integerValue: 15,
-            },
+            { input: '!5', operator: '!', integerValue: 5 },
+            { input: '-15', operator: '-', integerValue: 15 },
+            { input: '!true', operator: '!', booleanValue: true },
+            { input: '!false', operator: '!', booleanValue: false },
         ];
 
         for (const t of tests) {
@@ -127,7 +139,11 @@ describe('parser', () => {
 
             assert.strictEqual(expression.operator, t.operator);
 
-            testIntegerLiteral(expression.right!, t.integerValue);
+            if (t.integerValue) {
+                testIntegerLiteral(expression.right!, t.integerValue);
+            } else if (t.booleanValue) {
+                testBooleanLiteral(expression.right!, t.booleanValue);
+            }
         }
     });
 
@@ -141,6 +157,9 @@ describe('parser', () => {
             { input: '5 < 5', leftValue: 5, operator: '<', rightValue: 5 },
             { input: '5 == 5', leftValue: 5, operator: '==', rightValue: 5 },
             { input: '5 != 5', leftValue: 5, operator: '!=', rightValue: 5 },
+            { input: 'true == true', leftValue: true, operator: '==', rightValue: true },
+            { input: 'true != false', leftValue: true, operator: '!=', rightValue: false },
+            { input: 'false == false', leftValue: false, operator: '==', rightValue: false },
         ];
 
         for (const t of tests) {
@@ -153,11 +172,8 @@ describe('parser', () => {
 
             const statement = program.statements[0];
             assert.ok(statement instanceof ExpressionStatement);
-            const expression = (statement as ExpressionStatement).expression;
-            assert.ok(expression instanceof InfixExpression);
-            assert.strictEqual((expression as InfixExpression).operator, t.operator);
-            testIntegerLiteral((expression as InfixExpression).left, t.leftValue);
-            testIntegerLiteral((expression as InfixExpression).right!, t.rightValue);
+            const expression = (statement as ExpressionStatement).expression!;
+            testInfixExpression(expression, t.leftValue, t.operator, t.rightValue);
         }
     });
 
@@ -175,6 +191,10 @@ describe('parser', () => {
             { input: '5 > 4 == 3 < 4', expected: '((5 > 4) == (3 < 4))' },
             { input: '5 < 4 != 3 > 4', expected: '((5 < 4) != (3 > 4))' },
             { input: '3 + 4 * 5 == 3 * 1 + 4 * 5', expected: '((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))' },
+            { input: 'true', expected: 'true' },
+            { input: 'false', expected: 'false' },
+            { input: '3 > 5 == false', expected: '((3 > 5) == false)' },
+            { input: '3 < 5 == true', expected: '((3 < 5) == true)' },
         ];
 
         for (const t of tests) {
@@ -202,4 +222,39 @@ function testIntegerLiteral(expression: Expression, value: number) {
     assert.ok(expression instanceof IntegerLiteral);
     assert.strictEqual((expression as IntegerLiteral).value, value);
     assert.strictEqual((expression as IntegerLiteral).tokenLiteral(), value.toString());
+}
+
+function testBooleanLiteral(expression: Expression, value: boolean) {
+    assert.ok(expression instanceof BooleanLiteral);
+    assert.strictEqual((expression as BooleanLiteral).value, value);
+    assert.strictEqual((expression as BooleanLiteral).tokenLiteral(), value.toString());
+}
+
+function testIdentifier(expression: Expression, value: string) {
+    assert.ok(expression instanceof Identifier);
+    assert.strictEqual((expression as Identifier).value, value);
+    assert.strictEqual((expression as Identifier).tokenLiteral(), value);
+}
+
+function testLiteralExpression(expression: Expression, expected: any) {
+    switch (typeof expected) {
+        case 'number':
+            testIntegerLiteral(expression, expected);
+            break;
+        case 'string':
+            testIdentifier(expression, expected);
+            break;
+        case 'boolean':
+            testBooleanLiteral(expression, expected);
+            break;
+        default:
+            assert.fail(`type of expression not handled. got=${typeof expected}`);
+    }
+}
+
+function testInfixExpression(expression: Expression, left: any, operator: string, right: any) {
+    assert.ok(expression instanceof InfixExpression);
+    testLiteralExpression((expression as InfixExpression).left, left);
+    assert.strictEqual((expression as InfixExpression).operator, operator);
+    testLiteralExpression((expression as InfixExpression).right!, right);
 }

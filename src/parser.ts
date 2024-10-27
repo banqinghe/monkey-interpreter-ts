@@ -1,6 +1,7 @@
 import Lexer from './lexer';
 import Token, { TokenType } from './token';
 import {
+    BooleanLiteral,
     Expression,
     ExpressionStatement,
     Identifier,
@@ -55,6 +56,8 @@ export default class Parser {
         this.prefixParseFns = new Map([
             [Token.IDENT, this.parseIdentifier.bind(this)],
             [Token.INT, this.parseIntegerLiteral.bind(this)],
+            [Token.TRUE, this.parseBooleanLiteral.bind(this)],
+            [Token.FALSE, this.parseBooleanLiteral.bind(this)],
             [Token.BANG, this.parsePrefixExpression.bind(this)],
             [Token.MINUS, this.parsePrefixExpression.bind(this)],
         ]);
@@ -219,6 +222,13 @@ export default class Parser {
         return new IntegerLiteral({
             token: this.curToken,
             value: parseInt(this.curToken.literal),
+        });
+    }
+
+    parseBooleanLiteral(): Expression {
+        return new BooleanLiteral({
+            token: this.curToken,
+            value: this.curTokenIs(Token.TRUE),
         });
     }
 
