@@ -1,18 +1,8 @@
 import assert from 'node:assert';
 import { test, describe } from 'node:test';
-import { ExpressionStatement, Identifier, IntegerLiteral, LetStatement } from '../src/ast';
+import { Expression, ExpressionStatement, Identifier, IntegerLiteral, LetStatement, PrefixExpression } from '../src/ast';
 import Lexer from '../src/lexer';
 import Parser from '../src/parser';
-
-function checkParserErrors(parser: Parser) {
-    const errors = parser.errors;
-
-    for (const error of errors) {
-        console.error(`Parser error: ${error}`);
-    }
-
-    assert.strictEqual(errors.length, 0, `Parser has ${errors.length} errors`);
-}
 
 describe('parser', () => {
     test('let statement', () => {
@@ -98,4 +88,54 @@ describe('parser', () => {
         assert.strictEqual(statement.tokenLiteral(), '5');
         assert.strictEqual((statement.expression as IntegerLiteral).value, 5);
     });
+
+    test('prefix expressions', () => {
+        const tests = [
+            {
+                input: '!5',
+                operator: '!',
+                integerValue: 5,
+            },
+            {
+                input: '-15',
+                operator: '-',
+                integerValue: 15,
+            },
+        ];
+
+        for (const t of tests) {
+            const lexer = new Lexer(t.input);
+            const parser = new Parser(lexer);
+            const program = parser.parseProgram();
+            checkParserErrors(parser);
+
+            assert.strictEqual(program.statements.length, 1);
+
+            const statement = program.statements[0];
+            assert.ok(statement instanceof ExpressionStatement);
+
+            const expression = (statement as ExpressionStatement).expression;
+            assert.ok(expression instanceof PrefixExpression);
+
+            assert.strictEqual(expression.operator, t.operator);
+
+            testIntegerLiteral(expression.right!, t.integerValue);
+        }
+    });
 });
+
+function checkParserErrors(parser: Parser) {
+    const errors = parser.errors;
+
+    for (const error of errors) {
+        console.error(`Parser error: ${error}`);
+    }
+
+    assert.strictEqual(errors.length, 0, `Parser has ${errors.length} errors`);
+}
+
+function testIntegerLiteral(expression: Expression, value: number) {
+    assert.ok(expression instanceof IntegerLiteral);
+    assert.strictEqual((expression as IntegerLiteral).value, value);
+    assert.strictEqual((expression as IntegerLiteral).tokenLiteral(), value.toString());
+}

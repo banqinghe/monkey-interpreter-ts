@@ -1,4 +1,4 @@
-import Token from './token';
+import Token, { TokenType } from './token';
 
 export interface Node {
     tokenLiteral(): string;
@@ -32,6 +32,8 @@ export class Program implements Node {
         return this.statements.map(s => s.toString()).join('\n');
     }
 }
+
+// TODO: better type, remove unnecessary optional properties
 
 export class LetStatement implements Statement {
     token: Token;
@@ -96,6 +98,32 @@ export class IntegerLiteral implements Expression {
 
     toString() {
         return this.token.literal;
+    }
+}
+
+export class PrefixExpression implements Expression {
+    token: Token;
+    operator: string;
+    right?: Expression;
+
+    constructor({ token, operator, right }: { token: Token; operator: string; right?: Expression }) {
+        this.token = token;
+        this.operator = operator;
+        this.right = right;
+    }
+
+    expressionNode() {}
+
+    tokenLiteral() {
+        return this.token.literal;
+    }
+
+    toString() {
+        if (this.right) {
+            return `(${this.operator}${this.right.toString()})`;
+        } else {
+            return '[Invalid PrefixExpression toString]';
+        }
     }
 }
 

@@ -6,6 +6,7 @@ import {
     Identifier,
     IntegerLiteral,
     LetStatement,
+    PrefixExpression,
     Program,
     ReturnStatement,
     Statement,
@@ -40,6 +41,8 @@ export default class Parser {
         this.prefixParseFns = new Map([
             [Token.IDENT, this.parseIdentifier.bind(this)],
             [Token.INT, this.parseIntegerLiteral.bind(this)],
+            [Token.BANG, this.parsePrefixExpression.bind(this)],
+            [Token.MINUS, this.parsePrefixExpression.bind(this)],
         ]);
         this.infixParseFns = new Map();
 
@@ -76,12 +79,8 @@ export default class Parser {
         this.errors.push(`expected next token to be ${t}, got ${this.peekToken.type} instead`);
     }
 
-    registerPrefix(tokenType: TokenType, fn: prefixParseFn) {
-        this.prefixParseFns.set(tokenType, fn);
-    }
-
-    registerInfix(tokenType: TokenType, fn: infixParseFn) {
-        this.infixParseFns.set(tokenType, fn);
+    noPrefixParseFnError(t: TokenType) {
+        this.errors.push(`no prefix parse function for ${t} found`);
     }
 
     parseProgram(): Program {
@@ -160,6 +159,7 @@ export default class Parser {
     parseExpression(precedence: number) {
         const prefix = this.prefixParseFns.get(this.curToken.type);
         if (!prefix) {
+            this.noPrefixParseFnError(this.curToken.type);
             return;
         }
         return prefix();
@@ -178,5 +178,15 @@ export default class Parser {
             value: parseInt(this.curToken.literal),
         });
         return literal;
+    }
+
+    parsePrefixExpression(): Expression {
+        const prefixToken = this.curToken;
+        this.nextToken();
+        return new PrefixExpression({
+            token: prefixToken,
+            operator: prefixToken.literal,
+            right: this.parseExpression(PREFIX),
+        });
     }
 }
