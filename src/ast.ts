@@ -37,10 +37,10 @@ export class Program implements Node {
 
 export class LetStatement implements Statement {
     token: Token;
-    name?: Identifier;
-    value?: Expression;
+    name: Identifier;
+    value: Expression;
 
-    constructor(args: { token?: Token; name?: Identifier; value?: Expression } = {}) {
+    constructor(args: { token: Token; name: Identifier; value: Expression }) {
         this.token = args.token || new Token(Token.LET, 'let');
         this.name = args.name;
         this.value = args.value;
@@ -118,6 +118,29 @@ export class BooleanLiteral implements Expression {
 
     toString() {
         return this.token.literal;
+    }
+}
+
+export class FunctionLiteral implements Expression {
+    token: Token;
+    parameters: Identifier[];
+    body: BlockStatement;
+
+    constructor({ token, parameters, body }: { token: Token; parameters: Identifier[]; body: BlockStatement }) {
+        this.token = token;
+        this.parameters = parameters;
+        this.body = body;
+    }
+
+    expressionNode() {}
+
+    tokenLiteral() {
+        return this.token.literal;
+    }
+
+    toString() {
+        const params = this.parameters.map(p => p.toString()).join(', ');
+        return `${this.tokenLiteral()}(${params}) ${this.body.toString()}`;
     }
 }
 
@@ -204,13 +227,36 @@ export class IfExpression implements Expression {
     }
 }
 
+export class CallExpression implements Expression {
+    token: Token;
+    func: Expression;
+    args: Expression[];
+
+    constructor({ token, func, args }: { token: Token; func: Expression; args: Expression[] }) {
+        this.token = token;
+        this.func = func;
+        this.args = args;
+    }
+
+    expressionNode() {}
+
+    tokenLiteral() {
+        return this.token.literal;
+    }
+
+    toString() {
+        const args = this.args.map(arg => arg.toString()).join(', ');
+        return `${this.func.toString()}(${args})`;
+    }
+}
+
 export class ReturnStatement implements Statement {
     token: Token;
-    returnValue?: Expression;
+    returnValue: Expression;
 
-    constructor(args: { token?: Token; returnValue?: Expression } = {}) {
-        this.token = args.token || new Token(Token.RETURN, 'return');
-        this.returnValue = args.returnValue;
+    constructor({ token, returnValue }: { token: Token; returnValue: Expression }) {
+        this.token = token;
+        this.returnValue = returnValue;
     }
 
     statementNode() {}
@@ -230,9 +276,9 @@ export class ReturnStatement implements Statement {
 
 export class ExpressionStatement implements Statement {
     token: Token;
-    expression?: Expression;
+    expression: Expression;
 
-    constructor(args: { token: Token; expression?: Expression }) {
+    constructor(args: { token: Token; expression: Expression }) {
         this.token = args.token;
         this.expression = args.expression;
     }
@@ -240,11 +286,11 @@ export class ExpressionStatement implements Statement {
     statementNode() {}
 
     tokenLiteral() {
-        return this.token?.literal || '[Invalid ExpressionStatement tokenLiteral]';
+        return this.token.literal;
     }
 
     toString() {
-        return this.expression?.toString() || '[Invalid ExpressionStatement toString]';
+        return this.expression.toString();
     }
 }
 
@@ -264,6 +310,6 @@ export class BlockStatement implements Statement {
     }
 
     toString() {
-        return this.statements.map(statement => statement.toString()).join('\n');
+        return `{${this.statements.map(statement => statement.toString()).join('\n')}}`;
     }
 }

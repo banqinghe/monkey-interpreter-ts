@@ -2,67 +2,66 @@ import assert from 'node:assert';
 import { test, describe } from 'node:test';
 import {
     BooleanLiteral,
+    CallExpression,
     Expression,
     ExpressionStatement,
+    FunctionLiteral,
     Identifier,
     IfExpression,
     InfixExpression,
     IntegerLiteral,
     LetStatement,
     PrefixExpression,
+    ReturnStatement,
 } from '../src/ast';
 import Lexer from '../src/lexer';
 import Parser from '../src/parser';
 
 describe('parser', () => {
     test('let statement', () => {
-        const input = `
-            let x = 5;
-            let y = 10;
-            let foobar = 838383;
-        `;
+        const tests = [
+            { input: 'let x = 5;', expectedIdentifier: 'x', expectedValue: 5 },
+            { input: 'let y = 10;', expectedIdentifier: 'y', expectedValue: 10 },
+            { input: 'let foobar = 838383;', expectedIdentifier: 'foobar', expectedValue: 838383 },
+        ];
 
-        const lexer = new Lexer(input);
-        const parser = new Parser(lexer);
+        for (const t of tests) {
+            const lexer = new Lexer(t.input);
+            const parser = new Parser(lexer);
 
-        const program = parser.parseProgram();
-        checkParserErrors(parser);
+            const program = parser.parseProgram();
+            checkParserErrors(parser);
 
-        assert.ok(Array.isArray(program.statements), 'program.statements should be a array');
-        assert.strictEqual(program.statements.length, 3, 'The length of program.statements should be 3');
+            assert.ok(Array.isArray(program.statements), 'program.statements should be a array');
+            assert.strictEqual(program.statements.length, 1, 'The length of program.statements should be 1');
 
-        const tests = ['x', 'y', 'foobar'];
+            const letStatement = program.statements[0] as LetStatement;
 
-        const testLetStatement = (statement: LetStatement, name: string) => {
-            assert.strictEqual(statement.tokenLiteral(), 'let');
-            assert.strictEqual(statement.name!.value, name);
-            assert.strictEqual(statement.name!.tokenLiteral(), name);
-        };
-
-        for (let i = 0; i < tests.length; i++) {
-            const statement = program.statements[i];
-            assert.ok(statement instanceof LetStatement);
-            testLetStatement(statement, tests[i]);
+            testIdentifier(letStatement.name, t.expectedIdentifier);
+            testLiteralExpression(letStatement.value, t.expectedValue);
         }
     });
 
     test('return statement', () => {
-        const input = `
-            return 5;
-            return 10;
-            return 993 322;
-        `;
+        const tests = [
+            { input: 'return 5', expectedValue: 5 },
+            { input: 'return 10', expectedValue: 10 },
+            { input: 'return 838383', expectedValue: 838383 },
+        ];
 
-        const lexer = new Lexer(input);
-        const parser = new Parser(lexer);
+        for (const t of tests) {
+            const lexer = new Lexer(t.input);
+            const parser = new Parser(lexer);
 
-        const program = parser.parseProgram();
-        checkParserErrors(parser);
+            const program = parser.parseProgram();
+            checkParserErrors(parser);
 
-        assert.strictEqual(program.statements.length, 3, 'The length of program.statements should be 3');
+            assert.ok(Array.isArray(program.statements), 'program.statements should be a array');
+            assert.strictEqual(program.statements.length, 1, 'The length of program.statements should be 1');
 
-        for (const statement of program.statements) {
-            assert.strictEqual(statement.tokenLiteral(), 'return');
+            const returnStatement = program.statements[0] as ReturnStatement;
+
+            testLiteralExpression(returnStatement.returnValue, t.expectedValue);
         }
     });
 
@@ -202,9 +201,9 @@ describe('parser', () => {
             { input: '(5 + 5) * 2 * (5 + 5)', expected: '(((5 + 5) * 2) * (5 + 5))' },
             { input: '-(5 + 5)', expected: '(-(5 + 5))' },
             { input: '!(true == true)', expected: '(!(true == true))' },
-            // { input: 'a + add(b * c) + d', expected: '((a + add((b * c))) + d)' },
-            // { input: 'add(a, b, 1, 2 * 3, 4 + 5, add(6, 7 * 8))', expected: 'add(a, b, 1, (2 * 3), (4 + 5), add(6, (7 * 8)))' },
-            // { input: 'add(a + b + c * d / f + g)', expected: 'add((((a + b) + ((c * d) / f)) + g))' },
+            { input: 'a + add(b * c) + d', expected: '((a + add((b * c))) + d)' },
+            { input: 'add(a, b, 1, 2 * 3, 4 + 5, add(6, 7 * 8))', expected: 'add(a, b, 1, (2 * 3), (4 + 5), add(6, (7 * 8)))' },
+            { input: 'add(a + b + c * d / f + g)', expected: 'add((((a + b) + ((c * d) / f)) + g))' },
         ];
 
         for (const t of tests) {
@@ -265,6 +264,70 @@ describe('parser', () => {
         const alternativeExpression = (alternative as ExpressionStatement).expression;
         assert.ok(alternativeExpression instanceof Identifier);
         assert.strictEqual((alternativeExpression as Identifier).value, 'y');
+    });
+
+    test('function literal expression', () => {
+        const tests = [
+            { input: 'fn() {};', expectedParams: [] },
+            { input: 'fn(x) {};', expectedParams: ['x'] },
+            { input: 'fn(x, y, z) {};', expectedParams: ['x', 'y', 'z'] },
+        ];
+
+        for (const t of tests) {
+            const lexer = new Lexer(t.input);
+            const parser = new Parser(lexer);
+            const program = parser.parseProgram();
+            checkParserErrors(parser);
+            assert.strictEqual(program.statements.length, 1);
+
+            assert.ok(program.statements[0] instanceof ExpressionStatement);
+            const statement = program.statements[0] as ExpressionStatement;
+
+            assert.ok(statement.expression instanceof FunctionLiteral);
+            const functionLiteral = statement.expression as FunctionLiteral;
+            assert.strictEqual(functionLiteral.parameters.length, t.expectedParams.length);
+
+            for (let i = 0; i < t.expectedParams.length; i++) {
+                testLiteralExpression(functionLiteral.parameters[i], t.expectedParams[i]);
+            }
+            assert.strictEqual(functionLiteral.body.statements.length, 0);
+        }
+    });
+
+    test('function call', () => {
+        const tests = [
+            { input: 'foo();', expectFunc: 'foo', expectedParams: [] },
+            { input: 'add(1, 2 * 3, 4 + 5);', expectFunc: 'add', expectedParams: ['1', '(2 * 3)', '(4 + 5)'] },
+            { input: 'minus(1, fn (){});', expectFunc: 'minus', expectedParams: ['1', 'fn() {}'] },
+            { input: 'fn(a, b) {}(1, 2)', expectFunc: 'fn(a, b) {}', expectedParams: ['1', '2'] },
+        ];
+
+        for (const t of tests) {
+            const lexer = new Lexer(t.input);
+            const parser = new Parser(lexer);
+            const program = parser.parseProgram();
+            checkParserErrors(parser);
+
+            assert.strictEqual(program.statements.length, 1);
+
+            const statement = program.statements[0] as ExpressionStatement;
+            assert.ok(statement instanceof ExpressionStatement);
+            const callExpression = statement.expression as CallExpression;
+            assert.ok(callExpression instanceof CallExpression);
+
+            if (callExpression.func instanceof Identifier) {
+                testIdentifier(callExpression.func, t.expectFunc);
+            } else {
+                assert.strictEqual(callExpression.func.toString(), t.expectFunc);
+            }
+
+            assert.strictEqual(callExpression.args.length, t.expectedParams.length);
+
+            for (let i = 0; i < t.expectedParams.length; i++) {
+                // console.log(JSON.stringify(callExpression.args[i], null, 2) + '\n');
+                assert.strictEqual(callExpression.args[i].toString(), t.expectedParams[i]);
+            }
+        }
     });
 });
 

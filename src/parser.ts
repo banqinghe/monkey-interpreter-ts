@@ -3,8 +3,10 @@ import Token, { TokenType } from './token';
 import {
     BlockStatement,
     BooleanLiteral,
+    CallExpression,
     Expression,
     ExpressionStatement,
+    FunctionLiteral,
     Identifier,
     IfExpression,
     InfixExpression,
@@ -64,6 +66,7 @@ export default class Parser {
             [Token.MINUS, this.parsePrefixExpression.bind(this)],
             [Token.LPAREN, this.parseGroupedExpression.bind(this)],
             [Token.IF, this.parseIfExpression.bind(this)],
+            [Token.FUNCTION, this.parseFunctionLiteral.bind(this)],
         ]);
         this.infixParseFns = new Map([
             [Token.PLUS, this.parseInfixExpression.bind(this)],
@@ -74,6 +77,7 @@ export default class Parser {
             [Token.NOT_EQ, this.parseInfixExpression.bind(this)],
             [Token.LT, this.parseInfixExpression.bind(this)],
             [Token.GT, this.parseInfixExpression.bind(this)],
+            [Token.LPAREN, this.parseCallExpression.bind(this)],
         ]);
 
         this.nextToken();
@@ -147,38 +151,50 @@ export default class Parser {
     }
 
     parseLetStatement(): Statement {
-        const statement = new LetStatement();
+        const letToken = this.curToken;
 
         if (!this.expectPeek(Token.IDENT)) {
-            throw new Error(`parseLetStatement: got ${this.peekToken} instead of IDENT`);
+            throw new Error(`parseLetStatement: got ${this.peekToken.type} instead of IDENT`);
         }
-        statement.name = new Identifier({
+
+        const name = new Identifier({
             token: this.curToken,
             value: this.curToken.literal,
         });
 
         if (!this.expectPeek(Token.ASSIGN)) {
-            throw new Error(`parseLetStatement: got ${this.peekToken} instead of ASSIGN`);
+            throw new Error(`parseLetStatement: got ${this.peekToken.type} instead of ASSIGN`);
         }
-        // TODO: parse Expression
-        while (!this.curTokenIs(Token.SEMICOLON)) {
-            this.nextToken();
-        }
-
-        return statement;
-    }
-
-    parseReturnStatement(): Statement {
-        const statement = new ReturnStatement();
 
         this.nextToken();
 
-        // TODO: parse Expression
-        while (!this.curTokenIs(Token.SEMICOLON)) {
+        const value = this.parseExpression(LOWEST);
+
+        if (this.peekTokenIs(Token.SEMICOLON)) {
             this.nextToken();
         }
 
-        return statement;
+        return new LetStatement({
+            token: letToken,
+            name,
+            value,
+        });
+    }
+
+    parseReturnStatement(): Statement {
+        const returnToken = this.curToken;
+        this.nextToken();
+
+        const returnValue = this.parseExpression(LOWEST);
+
+        if (this.peekTokenIs(Token.SEMICOLON)) {
+            this.nextToken();
+        }
+
+        return new ReturnStatement({
+            token: returnToken,
+            returnValue,
+        });
     }
 
     parseExpressionStatement(): Statement {
@@ -232,7 +248,7 @@ export default class Parser {
         return leftExp;
     }
 
-    parseIdentifier(): Expression {
+    parseIdentifier(): Identifier {
         return new Identifier({
             token: this.curToken,
             value: this.curToken.literal,
@@ -301,10 +317,10 @@ export default class Parser {
         const condition = this.parseExpression(LOWEST);
 
         if (!this.expectPeek(Token.RPAREN)) {
-            throw new Error(`parseIfExpression: got ${this.peekToken} instead of RPAREN`);
+            throw new Error(`parseIfExpression: got ${this.peekToken.type} instead of RPAREN`);
         }
         if (!this.expectPeek(Token.LBRACE)) {
-            throw new Error(`parseIfExpression - if: got ${this.peekToken} instead of LBRACE`);
+            throw new Error(`parseIfExpression - if: got ${this.peekToken.type} instead of LBRACE`);
         }
 
         const consequence = this.parseBlockStatement();
@@ -313,7 +329,7 @@ export default class Parser {
         if (this.peekTokenIs(Token.ELSE)) {
             this.nextToken();
             if (!this.expectPeek(Token.LBRACE)) {
-                throw new Error(`parseIfExpression - else: got ${this.peekToken} instead of LBRACE`);
+                throw new Error(`parseIfExpression - else: got ${this.peekToken.type} instead of LBRACE`);
             }
             alternative = this.parseBlockStatement();
         }
@@ -324,5 +340,93 @@ export default class Parser {
             consequence,
             alternative,
         });
+    }
+
+    parseFunctionLiteral(): Expression {
+        // fn(x, y) { x + y; }
+        //  ^
+        const fnToken = this.curToken;
+
+        // fn(x, y) { x + y; }
+        //   ^
+        if (!this.expectPeek(Token.LPAREN)) {
+            throw new Error(`parseFunctionLiteral: got ${this.peekToken.type} instead of LPAREN`);
+        }
+
+        const parameters = this.parseFunctionParameters();
+
+        // fn(x, y) { x + y; }
+        //          ^
+        if (!this.expectPeek(Token.LBRACE)) {
+            throw new Error(`parseFunctionLiteral: got ${this.peekToken.type} instead of LBRACE`);
+        }
+
+        const body = this.parseBlockStatement();
+
+        return new FunctionLiteral({
+            token: fnToken,
+            parameters,
+            body,
+        });
+    }
+
+    parseFunctionParameters(): Identifier[] {
+        // empty parameter list
+        if (this.peekTokenIs(Token.RPAREN)) {
+            this.nextToken();
+            return [];
+        }
+
+        // fn(x, y) { x + y; }
+        //    ^
+        this.nextToken();
+
+        const identifiers: Identifier[] = [];
+        identifiers.push(this.parseIdentifier());
+
+        while (this.peekTokenIs(Token.COMMA)) {
+            this.nextToken();
+            this.nextToken();
+            identifiers.push(this.parseIdentifier());
+        }
+
+        if (!this.expectPeek(Token.RPAREN)) {
+            throw new Error(`parseFunctionParameters: got ${this.peekToken.type} instead of RPAREN`);
+        }
+
+        return identifiers;
+    }
+
+    parseCallExpression(func: Expression): Expression {
+        return new CallExpression({
+            token: this.curToken,
+            func,
+            args: this.parseCallArguments(),
+        });
+    }
+
+    parseCallArguments(): Expression[] {
+        if (this.peekTokenIs(Token.RPAREN)) {
+            this.nextToken();
+            return [];
+        }
+
+        this.nextToken();
+
+        const args: Expression[] = [];
+
+        args.push(this.parseExpression(LOWEST));
+
+        while (this.peekTokenIs(Token.COMMA)) {
+            this.nextToken();
+            this.nextToken();
+            args.push(this.parseExpression(LOWEST));
+        }
+
+        if (!this.expectPeek(Token.RPAREN)) {
+            throw new Error('parseCallArguments: got ${this.peekToken.type} instead of RPAREN');
+        }
+
+        return args;
     }
 }
