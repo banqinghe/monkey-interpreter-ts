@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.cm-editor {
+    font-size: 15px;
+}
+
+.input :is(.cm-content, .cm-gutters) {
+    min-height: calc(100vh - 40px) !important;
+}
+
+.ast :is(.cm-content, .cm-gutters) {
+    min-height: 100vh !important;
+}
+
+.cm-focused {
+    outline: none !important;
+}

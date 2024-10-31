@@ -1,0 +1,31 @@
+{
+    "name": "monkey-interpreter-playground",
+    "private": true,
+    "version": "0.0.0",
+    "type": "module",
+    "scripts": {
+        "dev": "vite",
+        "build": "tsc -b && vite build",
+        "preview": "vite preview"
+    },
+    "dependencies": {
+        "@codemirror/lang-json": "^6.0.1",
+        "@mantine/core": "^7.13.4",
+        "@uiw/codemirror-theme-github": "^4.23.6",
+        "@uiw/react-codemirror": "^4.23.6",
+        "classnames": "^2.5.1",
+        "react": "^18.3.1",
+        "react-dom": "^18.3.1",
+        "react-resizable-panels": "^2.1.6"
+    },
+    "devDependencies": {
+        "@types/react": "^18.3.12",
+        "@types/react-dom": "^18.3.1",
+        "@vitejs/plugin-react": "^4.3.3",
+        "autoprefixer": "^10.4.20",
+        "postcss": "^8.4.47",
+        "tailwindcss": "^3.4.14",
+        "typescript": "~5.6.2",
+        "vite": "^5.4.10"
+    }
+}
