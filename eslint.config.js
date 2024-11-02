@@ -17,4 +17,7 @@ export default [
             '@stylistic/arrow-parens': ['error', 'as-needed'],
         },
     },
+    {
+        ignores: ['dist'],
+    },
 ];

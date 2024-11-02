@@ -1,6 +1,7 @@
 import Token, { TokenType } from './token';
 
 export interface Node {
+    type: string;
     tokenLiteral(): string;
     toString(): string;
 }
@@ -14,6 +15,7 @@ export interface Expression extends Node {
 }
 
 export class Program implements Node {
+    type = 'Program';
     statements: Statement[];
 
     constructor(statements: Statement[] = []) {
@@ -36,6 +38,7 @@ export class Program implements Node {
 // TODO: better type, remove unnecessary optional properties
 
 export class LetStatement implements Statement {
+    type = 'LetStatement';
     token: Token;
     name: Identifier;
     value: Expression;
@@ -62,6 +65,7 @@ export class LetStatement implements Statement {
 }
 
 export class Identifier implements Expression {
+    type = 'Identifier';
     token: Token;
     value: string;
 
@@ -82,6 +86,7 @@ export class Identifier implements Expression {
 }
 
 export class IntegerLiteral implements Expression {
+    type = 'IntegerLiteral';
     token: Token;
     value: number;
 
@@ -102,6 +107,7 @@ export class IntegerLiteral implements Expression {
 }
 
 export class BooleanLiteral implements Expression {
+    type = 'BooleanLiteral';
     token: Token;
     value: boolean;
 
@@ -122,6 +128,7 @@ export class BooleanLiteral implements Expression {
 }
 
 export class FunctionLiteral implements Expression {
+    type = 'FunctionLiteral';
     token: Token;
     parameters: Identifier[];
     body: BlockStatement;
@@ -145,6 +152,7 @@ export class FunctionLiteral implements Expression {
 }
 
 export class PrefixExpression implements Expression {
+    type = 'PrefixExpression';
     token: Token;
     operator: string;
     right?: Expression;
@@ -171,6 +179,7 @@ export class PrefixExpression implements Expression {
 }
 
 export class InfixExpression implements Expression {
+    type = 'InfixExpression';
     token: Token;
     left: Expression;
     operator: string;
@@ -195,6 +204,7 @@ export class InfixExpression implements Expression {
 }
 
 export class IfExpression implements Expression {
+    type = 'IfExpression';
     token: Token;
     condition: Expression;
     consequence: BlockStatement;
@@ -228,6 +238,7 @@ export class IfExpression implements Expression {
 }
 
 export class CallExpression implements Expression {
+    type = 'CallExpression';
     token: Token;
     func: Expression;
     args: Expression[];
@@ -251,6 +262,7 @@ export class CallExpression implements Expression {
 }
 
 export class ReturnStatement implements Statement {
+    type = 'ReturnStatement';
     token: Token;
     returnValue: Expression;
 
@@ -275,6 +287,7 @@ export class ReturnStatement implements Statement {
 }
 
 export class ExpressionStatement implements Statement {
+    type = 'ExpressionStatement';
     token: Token;
     expression: Expression;
 
@@ -295,6 +308,7 @@ export class ExpressionStatement implements Statement {
 }
 
 export class BlockStatement implements Statement {
+    type = 'BlockStatement';
     token: Token;
     statements: Statement[];
 
