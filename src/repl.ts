@@ -3,8 +3,13 @@ import fs from 'node:fs';
 import colors from 'picocolors';
 import Lexer from './lexer';
 import Parser from './parser';
+import { evaluate } from './evaluator';
 
 const { green } = colors;
+
+function print(text: string) {
+    console.log(green(text));
+}
 
 function start() {
     console.log('Welcome to Monkey programming language.');
@@ -20,10 +25,11 @@ function start() {
 
                 if (parser.errors.length > 0) {
                     parser.errors.forEach(err => console.error(`Error: ${err}`));
-                    throw new Error('Parsing failed');
+                    throw new Error(`Parsing failed, got ${parser.errors.length} errors`);
                 }
 
-                console.log(green(program.toString()));
+                const evaluated = evaluate(program);
+                print(evaluated.inspect());
 
                 callback(null);
             } catch (error) {

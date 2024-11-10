@@ -35,8 +35,6 @@ export class Program implements Node {
     }
 }
 
-// TODO: better type, remove unnecessary optional properties
-
 export class LetStatement implements Statement {
     type = 'LetStatement';
     token: Token;
@@ -56,11 +54,7 @@ export class LetStatement implements Statement {
     }
 
     toString() {
-        if (this.name && this.value) {
-            return `${this.tokenLiteral()} ${this.name.toString()} = ${this.value.toString()}`;
-        } else {
-            return '[Invalid LetStatement toString]';
-        }
+        return `${this.tokenLiteral()} ${this.name.toString()} = ${this.value.toString()}`;
     }
 }
 
