@@ -21,7 +21,7 @@ import {
 type prefixParseFn = () => Expression;
 type infixParseFn = (left: Expression) => Expression;
 
-// 优先级
+// precedence value
 const LOWEST = 0;
 const EQUALS = 1; // ==
 const LESSGREATER = 2; // > or <
@@ -63,6 +63,7 @@ export default class Parser {
             [Token.TRUE, this.parseBooleanLiteral.bind(this)],
             [Token.FALSE, this.parseBooleanLiteral.bind(this)],
             [Token.BANG, this.parsePrefixExpression.bind(this)],
+            [Token.PLUS, this.parsePrefixExpression.bind(this)],
             [Token.MINUS, this.parsePrefixExpression.bind(this)],
             [Token.LPAREN, this.parseGroupedExpression.bind(this)],
             [Token.IF, this.parseIfExpression.bind(this)],

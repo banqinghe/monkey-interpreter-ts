@@ -155,9 +155,9 @@ export class PrefixExpression implements Expression {
     type = 'PrefixExpression';
     token: Token;
     operator: string;
-    right?: Expression;
+    right: Expression;
 
-    constructor({ token, operator, right }: { token: Token; operator: string; right?: Expression }) {
+    constructor({ token, operator, right }: { token: Token; operator: string; right: Expression }) {
         this.token = token;
         this.operator = operator;
         this.right = right;
@@ -170,11 +170,7 @@ export class PrefixExpression implements Expression {
     }
 
     toString() {
-        if (this.right) {
-            return `(${this.operator}${this.right.toString()})`;
-        } else {
-            return '[Invalid PrefixExpression toString]';
-        }
+        return `(${this.operator}${this.right.toString()})`;
     }
 }
 

@@ -10,11 +10,11 @@ function isDigit(ch: string): boolean {
 
 export default class Lexer {
     input: string;
-    /** 输入字符串当前的位置 (指向当前字符) */
+    /** Current position in the input string (points to the current character) */
     position: number;
-    /** 输入字符串当前的读取位置 (指向当前字符后的一个字符) */
+    /** Current reading position in the input string (points to the character after the current character) */
     readPosition: number;
-    /** 当前正在查看的字符 */
+    /** The current character being examined */
     ch: string;
 
     constructor(input: string) {
@@ -26,7 +26,7 @@ export default class Lexer {
         this.readChar();
     }
 
-    /** 读取下一个字符 */
+    /** Reads the next character */
     readChar() {
         if (this.readPosition >= this.input.length) {
             this.ch = '';
@@ -37,7 +37,7 @@ export default class Lexer {
         this.readPosition += 1;
     }
 
-    /** 查看下一个字符 */
+    /** Peeks at the next character */
     peekChar(): string {
         if (this.readPosition >= this.input.length) {
             return '';
@@ -46,7 +46,7 @@ export default class Lexer {
         }
     }
 
-    /** 读取下一个 identifier, 有 keywords 和普通 identifier 两种可能 */
+    /** Reads the next identifier, which can be either a keyword or a regular identifier */
     readIdentifier(): Token {
         const position = this.position;
         while (isLetter(this.ch)) {
@@ -58,7 +58,7 @@ export default class Lexer {
         return new Token(tokenType, identifier);
     }
 
-    /** 读取下一个数字 */
+    /** Reads the next number */
     readNumber(): Token {
         const position = this.position;
         while (isDigit(this.ch)) {
@@ -68,7 +68,7 @@ export default class Lexer {
         return new Token(Token.INT, number);
     }
 
-    /** 跳过空白格 */
+    /** Skips whitespace characters */
     skipWhitespace() {
         while (this.ch === ' ' || this.ch === '\t' || this.ch === '\n' || this.ch === '\r') {
             this.readChar();

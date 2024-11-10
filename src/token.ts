@@ -27,7 +27,7 @@ export type TokenType =
     | 'ELSE'
     | 'RETURN';
 
-/** 关键词映射表, 用来判断是否是关键词和关键词类型 */
+/** Keyword map, used to determine if a word is a keyword and its type */
 const keywords: Record<string, TokenType> = {
     fn: 'FUNCTION',
     let: 'LET',
