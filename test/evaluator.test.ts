@@ -27,6 +27,8 @@ describe('evaluator', () => {
         const tests = [
             { input: '5', expected: 5 },
             { input: '10', expected: 10 },
+            { input: '-5', expected: -5 },
+            { input: '-10', expected: -10 },
         ];
 
         for (const test of tests) {
@@ -39,6 +41,22 @@ describe('evaluator', () => {
         const tests = [
             { input: 'true', expected: true },
             { input: 'false', expected: false },
+        ];
+
+        for (const test of tests) {
+            const evaluated = testEval(test.input);
+            testBooleanObject(evaluated, test.expected);
+        }
+    });
+
+    test('bang operator', () => {
+        const tests = [
+            { input: '!true', expected: false },
+            { input: '!false', expected: true },
+            { input: '!5', expected: false },
+            { input: '!!true', expected: true },
+            { input: '!!false', expected: false },
+            { input: '!!5', expected: true },
         ];
 
         for (const test of tests) {

@@ -1,4 +1,4 @@
-import { BooleanLiteral, ExpressionStatement, IntegerLiteral, Node, Program, Statement } from './ast';
+import { BooleanLiteral, ExpressionStatement, IntegerLiteral, Node, PrefixExpression, Program, Statement } from './ast';
 import { MonkeyObject, Integer, Null, Boolean } from './object';
 
 const TRUE = new Boolean(true);
@@ -22,6 +22,11 @@ export function evaluate(node: Node): MonkeyObject {
         return node.value ? TRUE : FALSE;
     }
 
+    if (node instanceof PrefixExpression) {
+        const right = evaluate(node.right);
+        return evaluatePrefixExpression(node.operator, right);
+    }
+
     throw new Error(`Unknown node type: ${node.type}`);
 }
 
@@ -33,4 +38,35 @@ function evaluateStatements(statements: Statement[]): MonkeyObject {
     }
 
     return result;
+}
+
+function evaluatePrefixExpression(operator: string, right: MonkeyObject): MonkeyObject {
+    if (operator === '!') {
+        return evaluateBangOperatorExpression(right);
+    } else if (operator === '-') {
+        return evaluateMinusPrefixOperatorExpression(right);
+    } else {
+        throw new Error(`Unknown prefix operator: ${operator}`);
+    }
+}
+
+function evaluateBangOperatorExpression(right: MonkeyObject): MonkeyObject {
+    switch (right) {
+        case TRUE:
+            return FALSE;
+        case FALSE:
+            return TRUE;
+        case NULL:
+            return TRUE;
+        default:
+            return FALSE;
+    }
+}
+
+function evaluateMinusPrefixOperatorExpression(right: MonkeyObject): MonkeyObject {
+    if (!(right instanceof Integer)) {
+        throw new Error(`Unknown operator: -${right.type}`);
+    }
+
+    return new Integer(-right.value);
 }
