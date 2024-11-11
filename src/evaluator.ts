@@ -1,4 +1,13 @@
-import { BooleanLiteral, ExpressionStatement, IntegerLiteral, Node, PrefixExpression, Program, Statement } from './ast';
+import {
+    BooleanLiteral,
+    ExpressionStatement,
+    InfixExpression,
+    IntegerLiteral,
+    Node,
+    PrefixExpression,
+    Program,
+    Statement,
+} from './ast';
 import { MonkeyObject, Integer, Null, Boolean } from './object';
 
 const TRUE = new Boolean(true);
@@ -25,6 +34,12 @@ export function evaluate(node: Node): MonkeyObject {
     if (node instanceof PrefixExpression) {
         const right = evaluate(node.right);
         return evaluatePrefixExpression(node.operator, right);
+    }
+
+    if (node instanceof InfixExpression) {
+        const left = evaluate(node.left);
+        const right = evaluate(node.right);
+        return evaluateInfixExpression(node.operator, left, right);
     }
 
     throw new Error(`Unknown node type: ${node.type}`);
@@ -69,4 +84,42 @@ function evaluateMinusPrefixOperatorExpression(right: MonkeyObject): MonkeyObjec
     }
 
     return new Integer(-right.value);
+}
+
+function evaluateInfixExpression(operator: string, left: MonkeyObject, right: MonkeyObject): MonkeyObject {
+    if (left instanceof Integer && right instanceof Integer) {
+        return evaluateIntegerInfixExpression(operator, left, right);
+    }
+
+    // just compare the objects directly, only integers need use their value
+    if (operator == '==') {
+        return left == right ? TRUE : FALSE;
+    } else if (operator == '!=') {
+        return left !== right ? TRUE : FALSE;
+    }
+
+    throw new Error('Unknown');
+}
+
+function evaluateIntegerInfixExpression(operator: string, left: Integer, right: Integer): MonkeyObject {
+    switch (operator) {
+        case '+':
+            return new Integer(left.value + right.value);
+        case '-':
+            return new Integer(left.value - right.value);
+        case '*':
+            return new Integer(left.value * right.value);
+        case '/':
+            return new Integer(left.value / right.value);
+        case '<':
+            return left.value < right.value ? TRUE : FALSE;
+        case '>':
+            return left.value > right.value ? TRUE : FALSE;
+        case '==':
+            return left.value === right.value ? TRUE : FALSE;
+        case '!=':
+            return left.value !== right.value ? TRUE : FALSE;
+        default:
+            throw new Error(`Unknown operator: ${operator}`);
+    }
 }
