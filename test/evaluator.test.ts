@@ -2,7 +2,7 @@ import assert from 'node:assert';
 import { test, describe } from 'node:test';
 import Lexer from '../src/lexer';
 import Parser from '../src/parser';
-import { MonkeyObject, Integer, Boolean } from '../src/object';
+import { MonkeyObject, Integer, Boolean, NULL } from '../src/object';
 import { evaluate } from '../src/evaluator';
 
 function testEval(input: string): MonkeyObject {
@@ -20,6 +20,10 @@ function testIntegerObject(obj: MonkeyObject, expected: number) {
 function testBooleanObject(obj: MonkeyObject, expected: boolean) {
     assert.ok(obj instanceof Boolean, 'obj is not Boolean');
     assert.strictEqual(obj.value, expected);
+}
+
+function testNullObject(obj: MonkeyObject) {
+    assert.strictEqual(obj, NULL);
 }
 
 describe('evaluator', () => {
@@ -114,6 +118,32 @@ describe('evaluator', () => {
         for (const test of tests) {
             const evaluated = testEval(test.input);
             testBooleanObject(evaluated, test.expected);
+        }
+    });
+
+    test('if else expressions', () => {
+        const tests = [
+            { input: 'if (true) { 10 }', expected: 10 },
+            { input: 'if (false) { 10 } else { 20 }', expected: 20 },
+            { input: 'if (1 < 2) { 10 }', expected: 10 },
+            { input: 'if (1 > 2) { 10 }', expected: null },
+            { input: 'if (1 > 2) { 10 } else { 20 }', expected: 20 },
+            { input: 'if (1 == 1) { 10 }', expected: 10 },
+            { input: 'if (1 != 1) { 10 }', expected: null },
+            { input: 'if (1 != 1) { 10 } else { 20 }', expected: 20 },
+            { input: 'if (1 == 1) { if (1 > 2) { 10 } else { 20 } }', expected: 20 },
+            { input: 'if (1 == 1) { if (1 < 2) { 10 } else { 20 } }', expected: 10 },
+            { input: 'if (1 == 1) { if (1 > 2) { 10 } else { 20 } } else { 30 }', expected: 20 },
+            { input: 'if (1 == 1) { if (1 < 2) { 10 } else { 20 } } else { 30 }', expected: 10 },
+        ];
+
+        for (const test of tests) {
+            const evaluated = testEval(test.input);
+            if (test.expected === null) {
+                testNullObject(evaluated);
+            } else {
+                testIntegerObject(evaluated, test.expected);
+            }
         }
     });
 });

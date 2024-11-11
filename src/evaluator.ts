@@ -1,6 +1,8 @@
 import {
+    BlockStatement,
     BooleanLiteral,
     ExpressionStatement,
+    IfExpression,
     InfixExpression,
     IntegerLiteral,
     Node,
@@ -8,11 +10,7 @@ import {
     Program,
     Statement,
 } from './ast';
-import { MonkeyObject, Integer, Null, Boolean } from './object';
-
-const TRUE = new Boolean(true);
-const FALSE = new Boolean(false);
-const NULL = new Null();
+import { MonkeyObject, Integer, NULL, TRUE, FALSE } from './object';
 
 export function evaluate(node: Node): MonkeyObject {
     if (node instanceof Program) {
@@ -42,7 +40,33 @@ export function evaluate(node: Node): MonkeyObject {
         return evaluateInfixExpression(node.operator, left, right);
     }
 
+    if (node instanceof BlockStatement) {
+        return evaluateStatements(node.statements);
+    }
+
+    if (node instanceof IfExpression) {
+        const condition = evaluate(node.condition);
+        if (isTruthy(condition)) {
+            return evaluate(node.consequence);
+        } else {
+            return node.alternative ? evaluate(node.alternative) : NULL;
+        }
+    }
+
     throw new Error(`Unknown node type: ${node.type}`);
+}
+
+function isTruthy(obj: MonkeyObject): boolean {
+    switch (obj) {
+        case NULL:
+            return false;
+        case TRUE:
+            return true;
+        case FALSE:
+            return false;
+        default:
+            return true;
+    }
 }
 
 function evaluateStatements(statements: Statement[]): MonkeyObject {
@@ -74,6 +98,7 @@ function evaluateBangOperatorExpression(right: MonkeyObject): MonkeyObject {
         case NULL:
             return TRUE;
         default:
+            // !integer is false
             return FALSE;
     }
 }
