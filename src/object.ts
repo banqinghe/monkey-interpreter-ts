@@ -1,11 +1,15 @@
 type MonkeyObjectType =
     | 'INTEGER'
     | 'BOOLEAN'
-    | 'NULL';
+    | 'NULL'
+    | 'RETURN'
+    | 'ERROR';
 
 const INTEGER_OBJ = 'INTEGER';
 const BOOLEAN_OBJ = 'BOOLEAN';
 const NULL_OBJ = 'NULL';
+const RETURN_VALUE_OBJ = 'RETURN';
+const ERROR_OBJ = 'ERROR';
 
 export interface MonkeyObject {
     type(): MonkeyObjectType;
@@ -45,3 +49,31 @@ export class Null implements MonkeyObject {
         return NULL_OBJ;
     }
 }
+
+export class ReturnValue implements MonkeyObject {
+    constructor(readonly value: MonkeyObject) {}
+
+    inspect(): string {
+        return this.value.inspect();
+    }
+
+    type(): MonkeyObjectType {
+        return RETURN_VALUE_OBJ;
+    }
+}
+
+export class MonkeyError implements MonkeyObject {
+    constructor(readonly message: string) {}
+
+    inspect(): string {
+        return `ERROR: ${this.message}`;
+    }
+
+    type(): MonkeyObjectType {
+        return ERROR_OBJ;
+    }
+}
+
+export const TRUE = new Boolean(true);
+export const FALSE = new Boolean(false);
+export const NULL = new Null();

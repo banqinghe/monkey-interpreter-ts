@@ -19,7 +19,8 @@
     "scripts": {
         "build": "unbuild",
         "repl": "tsx src/repl.ts",
-        "test": "tsx --test"
+        "test": "tsx --test",
+        "test:watch": "tsx --test --watch"
     },
     "devDependencies": {
         "@stylistic/eslint-plugin": "^2.9.0",

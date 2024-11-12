@@ -2,7 +2,7 @@ import assert from 'node:assert';
 import { test, describe } from 'node:test';
 import Lexer from '../src/lexer';
 import Parser from '../src/parser';
-import { MonkeyObject, Integer, Boolean, NULL } from '../src/object';
+import { MonkeyObject, Integer, Boolean, NULL, MonkeyError } from '../src/object';
 import { evaluate } from '../src/evaluator';
 
 function testEval(input: string): MonkeyObject {
@@ -144,6 +144,59 @@ describe('evaluator', () => {
             } else {
                 testIntegerObject(evaluated, test.expected);
             }
+        }
+    });
+
+    test('return', () => {
+        const tests = [
+            { input: 'return 10;', expected: 10 },
+            { input: 'return 3; 9;', expected: 3 },
+            { input: 'return 2 * 4; 9;', expected: 8 },
+            { input: '9; return 2 * 7; 9;', expected: 14 },
+            {
+                input: `
+                    if (10 > 1) {
+                        if (10 > 1) {
+                            return 10;
+                        }
+                        return 1;
+                    }
+                `,
+                expected: 10,
+            },
+        ];
+
+        for (const test of tests) {
+            const evaluated = testEval(test.input);
+            testIntegerObject(evaluated, test.expected);
+        }
+    });
+
+    test('error handler', () => {
+        const tests = [
+            { input: '5 + true;', expected: 'type mismatch: INTEGER + BOOLEAN' },
+            { input: '5 + true; 5;', expected: 'type mismatch: INTEGER + BOOLEAN' },
+            { input: '-true;', expected: 'unknown operator: -BOOLEAN' },
+            { input: 'true + false;', expected: 'unknown operator: BOOLEAN + BOOLEAN' },
+            { input: '5; true + false; 5;', expected: 'unknown operator: BOOLEAN + BOOLEAN' },
+            { input: 'if (10 > 1) { true + false; }', expected: 'unknown operator: BOOLEAN + BOOLEAN' },
+            {
+                input: `
+                    if (10 > 1) {
+                        if (10 > 1) {
+                            return true + false;
+                        }
+                        return 1;
+                    }
+                `,
+                expected: 'unknown operator: BOOLEAN + BOOLEAN',
+            },
+        ];
+
+        for (const test of tests) {
+            const evaluated = testEval(test.input);
+            assert.ok(evaluated instanceof MonkeyError, `no error object returned. got=${JSON.stringify(evaluated)}`);
+            assert.strictEqual(evaluated.message, test.expected, 'wrong error message');
         }
     });
 });
