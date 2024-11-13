@@ -2,24 +2,50 @@ import {
     BlockStatement,
     BooleanLiteral,
     ExpressionStatement,
+    Identifier,
     IfExpression,
     InfixExpression,
     IntegerLiteral,
+    LetStatement,
     Node,
     PrefixExpression,
     Program,
     ReturnStatement,
-    Statement,
 } from './ast';
-import { MonkeyObject, Integer, NULL, TRUE, FALSE, ReturnValue, MonkeyError } from './object';
+import {
+    MonkeyObject,
+    Integer,
+    ReturnValue,
+    MonkeyError,
+    TRUE,
+    FALSE,
+    NULL,
+} from './object';
+import Environment from './environment';
 
-export function evaluate(node: Node): MonkeyObject {
+export function evaluate(node: Node, env: Environment): MonkeyObject {
     if (node instanceof Program) {
-        return evaluateProgram(node);
+        return evaluateProgram(node, env);
+    }
+
+    if (node instanceof LetStatement) {
+        const value = evaluate(node.value, env);
+        if (isMonkeyError(value)) {
+            return value;
+        }
+        return env.set(node.name.value, value);
+    }
+
+    if (node instanceof ReturnStatement) {
+        const value = evaluate(node.returnValue, env);
+        if (isMonkeyError(value)) {
+            return value;
+        }
+        return new ReturnValue(value);
     }
 
     if (node instanceof ExpressionStatement) {
-        return evaluate(node.expression);
+        return evaluate(node.expression, env);
     }
 
     if (node instanceof IntegerLiteral) {
@@ -30,8 +56,12 @@ export function evaluate(node: Node): MonkeyObject {
         return node.value ? TRUE : FALSE;
     }
 
+    if (node instanceof Identifier) {
+        return evaluateIdentifier(node, env);
+    }
+
     if (node instanceof PrefixExpression) {
-        const right = evaluate(node.right);
+        const right = evaluate(node.right, env);
         if (isMonkeyError(right)) {
             return right;
         }
@@ -39,11 +69,11 @@ export function evaluate(node: Node): MonkeyObject {
     }
 
     if (node instanceof InfixExpression) {
-        const left = evaluate(node.left);
+        const left = evaluate(node.left, env);
         if (isMonkeyError(left)) {
             return left;
         }
-        const right = evaluate(node.right);
+        const right = evaluate(node.right, env);
         if (isMonkeyError(right)) {
             return right;
         }
@@ -51,27 +81,19 @@ export function evaluate(node: Node): MonkeyObject {
     }
 
     if (node instanceof BlockStatement) {
-        return evaluateBlockStatement(node);
+        return evaluateBlockStatement(node, env);
     }
 
     if (node instanceof IfExpression) {
-        const condition = evaluate(node.condition);
+        const condition = evaluate(node.condition, env);
         if (isMonkeyError(condition)) {
             return condition;
         }
         if (isTruthy(condition)) {
-            return evaluate(node.consequence);
+            return evaluate(node.consequence, env);
         } else {
-            return node.alternative ? evaluate(node.alternative) : NULL;
+            return node.alternative ? evaluate(node.alternative, env) : NULL;
         }
-    }
-
-    if (node instanceof ReturnStatement) {
-        const value = evaluate(node.returnValue);
-        if (isMonkeyError(value)) {
-            return value;
-        }
-        return new ReturnValue(value);
     }
 
     throw new Error(`Unknown node type: ${node.type}`);
@@ -94,11 +116,11 @@ function isMonkeyError(obj: MonkeyObject): boolean {
     return obj instanceof MonkeyError;
 }
 
-function evaluateProgram(program: Program): MonkeyObject {
+function evaluateProgram(program: Program, env: Environment): MonkeyObject {
     let result: MonkeyObject = NULL;
 
     for (const statement of program.statements) {
-        result = evaluate(statement);
+        result = evaluate(statement, env);
 
         if (result instanceof ReturnValue) {
             return result.value;
@@ -112,30 +134,15 @@ function evaluateProgram(program: Program): MonkeyObject {
     return result;
 }
 
-function evaluateBlockStatement(block: BlockStatement): MonkeyObject {
+function evaluateBlockStatement(block: BlockStatement, env: Environment): MonkeyObject {
     let result: MonkeyObject = NULL;
 
     for (const statement of block.statements) {
-        result = evaluate(statement);
+        result = evaluate(statement, env);
 
         if (result instanceof ReturnValue || result instanceof MonkeyError) {
             // return `result` instead of `result.value` to allow it to appear at the top of blocks
             return result;
-        }
-    }
-
-    return result;
-}
-
-function evaluateStatements(statements: Statement[]): MonkeyObject {
-    let result: MonkeyObject = NULL;
-
-    for (const statement of statements) {
-        result = evaluate(statement);
-
-        // If the statement is a return statement, return the value immediately.
-        if (result instanceof ReturnValue) {
-            return result.value;
         }
     }
 
@@ -215,4 +222,12 @@ function evaluateIntegerInfixExpression(operator: string, left: Integer, right: 
             // this branch will not be executed yet
             return new MonkeyError(`unknown operator ${left.type()} ${operator} ${right.type()}`);
     }
+}
+
+function evaluateIdentifier(node: Identifier, env: Environment): MonkeyObject {
+    const value = env.get(node.value);
+    if (value) {
+        return value;
+    }
+    return new MonkeyError(`identifier not found: ${node.value}`);
 }

@@ -4,6 +4,7 @@ import colors from 'picocolors';
 import Lexer from './lexer';
 import Parser from './parser';
 import { evaluate } from './evaluator';
+import Environment from './environment';
 
 const { green } = colors;
 
@@ -14,6 +15,8 @@ function print(text: string) {
 function start() {
     console.log('Welcome to Monkey programming language.');
     console.log('Type ".help" for more information.');
+
+    const env = new Environment();
 
     const replServer = repl.start({
         prompt: '>> ',
@@ -28,7 +31,7 @@ function start() {
                     throw new Error(`Parsing failed, got ${parser.errors.length} errors`);
                 }
 
-                const evaluated = evaluate(program);
+                const evaluated = evaluate(program, env);
                 print(evaluated.inspect());
 
                 callback(null);

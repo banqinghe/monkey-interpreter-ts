@@ -4,12 +4,13 @@ import Lexer from '../src/lexer';
 import Parser from '../src/parser';
 import { MonkeyObject, Integer, Boolean, NULL, MonkeyError } from '../src/object';
 import { evaluate } from '../src/evaluator';
+import Environment from '../src/environment';
 
 function testEval(input: string): MonkeyObject {
     const lexer = new Lexer(input);
     const parser = new Parser(lexer);
     const program = parser.parseProgram();
-    return evaluate(program);
+    return evaluate(program, new Environment());
 }
 
 function testIntegerObject(obj: MonkeyObject, expected: number) {
@@ -197,6 +198,20 @@ describe('evaluator', () => {
             const evaluated = testEval(test.input);
             assert.ok(evaluated instanceof MonkeyError, `no error object returned. got=${JSON.stringify(evaluated)}`);
             assert.strictEqual(evaluated.message, test.expected, 'wrong error message');
+        }
+    });
+
+    test('let statement', () => {
+        const tests = [
+            { input: 'let a = 5; a;', expected: 5 },
+            { input: 'let a = 5 * 5; a;', expected: 25 },
+            { input: 'let a = 6; let b = a; b;', expected: 6 },
+            { input: 'let a = 7; let b = a; let c = a + b + 5; c;', expected: 19 },
+        ];
+
+        for (const test of tests) {
+            const evaluated = testEval(test.input);
+            testIntegerObject(evaluated, test.expected);
         }
     });
 });
