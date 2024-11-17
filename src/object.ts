@@ -1,15 +1,20 @@
+import { BlockStatement, Identifier } from './ast';
+import { Environment } from './environment';
+
 type MonkeyObjectType =
     | 'INTEGER'
     | 'BOOLEAN'
     | 'NULL'
     | 'RETURN'
-    | 'ERROR';
+    | 'ERROR'
+    | 'FUNCTION';
 
 const INTEGER_OBJ = 'INTEGER';
 const BOOLEAN_OBJ = 'BOOLEAN';
 const NULL_OBJ = 'NULL';
 const RETURN_VALUE_OBJ = 'RETURN';
 const ERROR_OBJ = 'ERROR';
+const FUNCTION_OBJ = 'FUNCTION';
 
 export interface MonkeyObject {
     type(): MonkeyObjectType;
@@ -47,6 +52,24 @@ export class Null implements MonkeyObject {
 
     type(): MonkeyObjectType {
         return NULL_OBJ;
+    }
+}
+
+export class MonkeyFunction implements MonkeyObject {
+    constructor(
+        readonly parameters: Identifier[],
+        readonly body: BlockStatement,
+        // every function has its own environment
+        readonly env: Environment,
+    ) {}
+
+    inspect(): string {
+        const params = this.parameters.map(p => p.toString()).join(', ');
+        return `fn(${params}) ${this.body.toString()}`;
+    }
+
+    type(): MonkeyObjectType {
+        return FUNCTION_OBJ;
     }
 }
 

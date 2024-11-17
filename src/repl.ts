@@ -4,7 +4,7 @@ import colors from 'picocolors';
 import Lexer from './lexer';
 import Parser from './parser';
 import { evaluate } from './evaluator';
-import Environment from './environment';
+import { Environment } from './environment';
 
 const { green } = colors;
 

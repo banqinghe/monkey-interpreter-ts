@@ -1,7 +1,10 @@
 import {
     BlockStatement,
     BooleanLiteral,
+    CallExpression,
+    Expression,
     ExpressionStatement,
+    FunctionLiteral,
     Identifier,
     IfExpression,
     InfixExpression,
@@ -20,8 +23,9 @@ import {
     TRUE,
     FALSE,
     NULL,
+    MonkeyFunction,
 } from './object';
-import Environment from './environment';
+import { Environment, EnclosedEnvironment } from './environment';
 
 export function evaluate(node: Node, env: Environment): MonkeyObject {
     if (node instanceof Program) {
@@ -58,6 +62,24 @@ export function evaluate(node: Node, env: Environment): MonkeyObject {
 
     if (node instanceof Identifier) {
         return evaluateIdentifier(node, env);
+    }
+
+    if (node instanceof FunctionLiteral) {
+        const params = node.parameters;
+        const body = node.body;
+        return new MonkeyFunction(params, body, env);
+    }
+
+    if (node instanceof CallExpression) {
+        const func = evaluate(node.func, env);
+        if (isMonkeyError(func)) {
+            return func;
+        }
+        const args = evaluateExpressions(node.args, env);
+        if (args.length === 1 && isMonkeyError(args[0])) {
+            return args[0];
+        }
+        return applyFunction(func, args);
     }
 
     if (node instanceof PrefixExpression) {
@@ -147,6 +169,45 @@ function evaluateBlockStatement(block: BlockStatement, env: Environment): Monkey
     }
 
     return result;
+}
+
+function evaluateExpressions(expressions: Expression[], env: Environment): MonkeyObject[] {
+    const result: MonkeyObject[] = [];
+
+    for (const expression of expressions) {
+        const evaluated = evaluate(expression, env);
+        if (isMonkeyError(evaluated)) {
+            return [evaluated];
+        }
+        result.push(evaluated);
+    }
+
+    return result;
+}
+
+function applyFunction(fn: MonkeyObject, args: MonkeyObject[]) {
+    if (!(fn instanceof MonkeyFunction)) {
+        return new MonkeyError(`Not a function: ${fn.type}`);
+    }
+
+    const extendEnv = extendFunctionEnv(fn, args);
+    const evaluated = evaluate(fn.body, extendEnv);
+    return unwrapReturnValue(evaluated);
+}
+
+function extendFunctionEnv(fn: MonkeyFunction, args: MonkeyObject[]) {
+    const env = new EnclosedEnvironment(fn.env);
+    for (const [paramIdx, param] of fn.parameters.entries()) {
+        env.set(param.value, args[paramIdx]);
+    }
+    return env;
+}
+
+function unwrapReturnValue(obj: MonkeyObject): MonkeyObject {
+    if (obj instanceof ReturnValue) {
+        return obj.value;
+    }
+    return obj;
 }
 
 function evaluatePrefixExpression(operator: string, right: MonkeyObject): MonkeyObject {

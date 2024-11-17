@@ -2,9 +2,9 @@ import assert from 'node:assert';
 import { test, describe } from 'node:test';
 import Lexer from '../src/lexer';
 import Parser from '../src/parser';
-import { MonkeyObject, Integer, Boolean, NULL, MonkeyError } from '../src/object';
+import { MonkeyObject, Integer, Boolean, NULL, MonkeyError, MonkeyFunction } from '../src/object';
 import { evaluate } from '../src/evaluator';
-import Environment from '../src/environment';
+import { Environment } from '../src/environment';
 
 function testEval(input: string): MonkeyObject {
     const lexer = new Lexer(input);
@@ -213,5 +213,42 @@ describe('evaluator', () => {
             const evaluated = testEval(test.input);
             testIntegerObject(evaluated, test.expected);
         }
+    });
+
+    test('function', () => {
+        const input = 'fn(x) { x + 2; };';
+        const evaluated = testEval(input);
+        assert.ok(evaluated instanceof MonkeyFunction, `object not a function. got=${JSON.stringify(evaluated)}`);
+        assert.strictEqual(evaluated.parameters.length, 1, `function has wrong parameters. parameters=${JSON.stringify(evaluated.parameters)}`);
+        assert.strictEqual(evaluated.parameters[0].toString(), 'x', `parameter is not 'x'. got=${evaluated.parameters[0].toString()}`);
+        assert.strictEqual(evaluated.body.toString(), '{(x + 2)}', `body is not {(x + 2)}. got=${evaluated.body.toString()}`);
+    });
+
+    test('function application', () => {
+        const tests = [
+            { input: 'let identity = fn(x) { x; }; identity(5);', expected: 5 },
+            { input: 'let identity = fn(x) { return x; }; identity(6);', expected: 6 },
+            { input: 'let double = fn(x) { x * 2; }; double(7);', expected: 14 },
+            { input: 'let add = fn(x, y) { x + y; }; add(8, 9);', expected: 17 },
+            { input: 'let add = fn(x, y) { x + y; }; add(10 + 11, add(12, 13));', expected: 46 },
+            { input: 'fn(x) { x; }(14)', expected: 14 },
+        ];
+
+        for (const test of tests) {
+            const evaluated = testEval(test.input);
+            testIntegerObject(evaluated, test.expected);
+        }
+    });
+
+    test('closures', () => {
+        const input = `
+            let newAdder = fn(x) {
+                fn(y) { x + y };
+            };
+            let addTwo = newAdder(2);
+            addTwo(3);
+        `;
+        const evaluated = testEval(input);
+        testIntegerObject(evaluated, 5);
     });
 });
