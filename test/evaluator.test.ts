@@ -2,7 +2,7 @@ import assert from 'node:assert';
 import { test, describe } from 'node:test';
 import Lexer from '../src/lexer';
 import Parser from '../src/parser';
-import { MonkeyObject, Integer, Boolean, NULL, MonkeyError, MonkeyFunction } from '../src/object';
+import { MonkeyObject, MonkeyInteger, MonkeyBoolean, NULL, MonkeyError, MonkeyFunction, MonkeyString } from '../src/object';
 import { evaluate } from '../src/evaluator';
 import { Environment } from '../src/environment';
 
@@ -14,12 +14,17 @@ function testEval(input: string): MonkeyObject {
 }
 
 function testIntegerObject(obj: MonkeyObject, expected: number) {
-    assert.ok(obj instanceof Integer, 'obj is not Integer');
+    assert.ok(obj instanceof MonkeyInteger, 'obj is not Integer');
     assert.strictEqual(obj.value, expected);
 }
 
 function testBooleanObject(obj: MonkeyObject, expected: boolean) {
-    assert.ok(obj instanceof Boolean, 'obj is not Boolean');
+    assert.ok(obj instanceof MonkeyBoolean, 'obj is not Boolean');
+    assert.strictEqual(obj.value, expected);
+}
+
+function testStringObject(obj: MonkeyObject, expected: string) {
+    assert.ok(obj instanceof MonkeyString, 'obj is not String');
     assert.strictEqual(obj.value, expected);
 }
 
@@ -114,12 +119,32 @@ describe('evaluator', () => {
             { input: '(1 < 2) == false', expected: false },
             { input: '(1 > 2) == true', expected: false },
             { input: '(1 > 2) == false', expected: true },
+            { input: '"a" + "bc" == "abc"', expected: true },
+            { input: '"a" + "b\\"c" == "ab\\"c"', expected: true },
         ];
 
         for (const test of tests) {
             const evaluated = testEval(test.input);
             testBooleanObject(evaluated, test.expected);
         }
+    });
+
+    test('string expression', () => {
+        const tests = [
+            { input: '"Hello World"', expected: 'Hello World' },
+            { input: '"七七四十九 八八六十四 九九八十一"', expected: '七七四十九 八八六十四 九九八十一' },
+        ];
+
+        for (const test of tests) {
+            const evaluated = testEval(test.input);
+            testStringObject(evaluated, test.expected);
+        }
+    });
+
+    test('string concatenation', () => {
+        const test = '"1" + "23" + "456"';
+        const evaluated = testEval(test);
+        testStringObject(evaluated, '123456');
     });
 
     test('if else expressions', () => {
@@ -192,6 +217,7 @@ describe('evaluator', () => {
                 `,
                 expected: 'unknown operator: BOOLEAN + BOOLEAN',
             },
+            { input: '"a" - "b"', expected: 'unknown operator: STRING - STRING' },
         ];
 
         for (const test of tests) {

@@ -16,6 +16,7 @@ import {
     Program,
     ReturnStatement,
     Statement,
+    StringLiteral,
 } from './ast';
 
 type prefixParseFn = () => Expression;
@@ -62,6 +63,7 @@ export default class Parser {
             [Token.INT, this.parseIntegerLiteral.bind(this)],
             [Token.TRUE, this.parseBooleanLiteral.bind(this)],
             [Token.FALSE, this.parseBooleanLiteral.bind(this)],
+            [Token.STRING, this.parseStringLiteral.bind(this)],
             [Token.BANG, this.parsePrefixExpression.bind(this)],
             [Token.MINUS, this.parsePrefixExpression.bind(this)],
             [Token.LPAREN, this.parseGroupedExpression.bind(this)],
@@ -266,6 +268,13 @@ export default class Parser {
         return new BooleanLiteral({
             token: this.curToken,
             value: this.curTokenIs(Token.TRUE),
+        });
+    }
+
+    parseStringLiteral(): Expression {
+        return new StringLiteral({
+            token: this.curToken,
+            value: this.curToken.literal,
         });
     }
 

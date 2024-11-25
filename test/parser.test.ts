@@ -13,6 +13,7 @@ import {
     LetStatement,
     PrefixExpression,
     ReturnStatement,
+    StringLiteral,
 } from '../src/ast';
 import Lexer from '../src/lexer';
 import Parser from '../src/parser';
@@ -113,6 +114,20 @@ describe('parser', () => {
 
         testBooleanLiteral((program.statements[0] as ExpressionStatement).expression!, true);
         testBooleanLiteral((program.statements[1] as ExpressionStatement).expression!, false);
+    });
+
+    test('string literal expression', () => {
+        const input = '"hello world"';
+
+        const lexer = new Lexer(input);
+        const parser = new Parser(lexer);
+        const program = parser.parseProgram();
+        checkParserErrors(parser);
+
+        assert.strictEqual(program.statements.length, 1);
+        const statement = program.statements[0] as ExpressionStatement;
+
+        assert.strictEqual((statement.expression as StringLiteral).value, 'hello world');
     });
 
     test('prefix expressions', () => {

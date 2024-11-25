@@ -68,6 +68,26 @@ export default class Lexer {
         return new Token(Token.INT, number);
     }
 
+    readString(): string {
+        const chars: string[] = [];
+
+        while (true) {
+            this.readChar();
+            if (this.ch === '\\' && this.peekChar() === '"') {
+                this.readChar();
+                chars.push('"');
+            } else if (this.ch === '"') {
+                break;
+            } else if (this.ch === '') {
+                throw new Error('Lexer: unterminated string');
+            } else {
+                chars.push(this.ch);
+            }
+        }
+
+        return chars.join('');
+    }
+
     /** Skips whitespace characters */
     skipWhitespace() {
         while (this.ch === ' ' || this.ch === '\t' || this.ch === '\n' || this.ch === '\r') {
@@ -132,6 +152,9 @@ export default class Lexer {
                 break;
             case '}':
                 token = new Token(Token.RBRACE, this.ch);
+                break;
+            case '"':
+                token = new Token(Token.STRING, this.readString());
                 break;
             case '':
                 token = new Token(Token.EOF, '');

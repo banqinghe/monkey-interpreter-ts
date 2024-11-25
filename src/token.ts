@@ -25,7 +25,8 @@ export type TokenType =
     | 'FALSE'
     | 'IF'
     | 'ELSE'
-    | 'RETURN';
+    | 'RETURN'
+    | 'STRING';
 
 /** Keyword map, used to determine if a word is a keyword and its type */
 const keywords: Record<string, TokenType> = {
@@ -75,6 +76,9 @@ export default class Token {
     static IF: TokenType = 'IF';
     static ELSE: TokenType = 'ELSE';
     static RETURN: TokenType = 'RETURN';
+
+    // string
+    static STRING: TokenType = 'STRING';
 
     static lookupIdent(ident: string): TokenType {
         return keywords[ident] || 'IDENT';

@@ -7,7 +7,8 @@ type MonkeyObjectType =
     | 'NULL'
     | 'RETURN'
     | 'ERROR'
-    | 'FUNCTION';
+    | 'FUNCTION'
+    | 'STRING';
 
 const INTEGER_OBJ = 'INTEGER';
 const BOOLEAN_OBJ = 'BOOLEAN';
@@ -15,13 +16,14 @@ const NULL_OBJ = 'NULL';
 const RETURN_VALUE_OBJ = 'RETURN';
 const ERROR_OBJ = 'ERROR';
 const FUNCTION_OBJ = 'FUNCTION';
+const STRING_OBJ = 'STRING';
 
 export interface MonkeyObject {
     type(): MonkeyObjectType;
     inspect(): string;
 }
 
-export class Integer implements MonkeyObject {
+export class MonkeyInteger implements MonkeyObject {
     constructor(readonly value: number) {}
 
     inspect(): string {
@@ -33,7 +35,7 @@ export class Integer implements MonkeyObject {
     }
 }
 
-export class Boolean implements MonkeyObject {
+export class MonkeyBoolean implements MonkeyObject {
     constructor(readonly value: boolean) {}
 
     inspect(): string {
@@ -42,6 +44,18 @@ export class Boolean implements MonkeyObject {
 
     type(): MonkeyObjectType {
         return BOOLEAN_OBJ;
+    }
+}
+
+export class MonkeyString implements MonkeyObject {
+    constructor(readonly value: string) {}
+
+    inspect(): string {
+        return this.value;
+    }
+
+    type(): MonkeyObjectType {
+        return STRING_OBJ;
     }
 }
 
@@ -97,6 +111,6 @@ export class MonkeyError implements MonkeyObject {
     }
 }
 
-export const TRUE = new Boolean(true);
-export const FALSE = new Boolean(false);
+export const TRUE = new MonkeyBoolean(true);
+export const FALSE = new MonkeyBoolean(false);
 export const NULL = new Null();

@@ -121,6 +121,27 @@ export class BooleanLiteral implements Expression {
     }
 }
 
+export class StringLiteral implements Expression {
+    type = 'IntegerLiteral';
+    token: Token;
+    value: string;
+
+    constructor({ token, value }: { token: Token; value: string }) {
+        this.token = token;
+        this.value = value;
+    }
+
+    expressionNode() {}
+
+    tokenLiteral() {
+        return this.token.literal;
+    }
+
+    toString() {
+        return this.token.literal;
+    }
+}
+
 export class FunctionLiteral implements Expression {
     type = 'FunctionLiteral';
     token: Token;

@@ -151,4 +151,21 @@ describe('lexer', () => {
 
         assertTokens(input, tests);
     });
+
+    test('string', () => {
+        // "foobar"
+        // "foo bar"
+        const input = `
+            "dog\\"cat"
+        `;
+
+        const tests = [
+            // { expectedType: Token.STRING, expectedLiteral: 'foobar' },
+            // { expectedType: Token.STRING, expectedLiteral: 'foo bar' },
+            { expectedType: Token.STRING, expectedLiteral: 'dog"cat' },
+            { expectedType: Token.EOF, expectedLiteral: '' },
+        ];
+
+        assertTokens(input, tests);
+    });
 });

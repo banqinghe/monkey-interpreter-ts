@@ -14,16 +14,18 @@ import {
     PrefixExpression,
     Program,
     ReturnStatement,
+    StringLiteral,
 } from './ast';
 import {
     MonkeyObject,
-    Integer,
+    MonkeyInteger,
     ReturnValue,
     MonkeyError,
     TRUE,
     FALSE,
     NULL,
     MonkeyFunction,
+    MonkeyString,
 } from './object';
 import { Environment, EnclosedEnvironment } from './environment';
 
@@ -53,11 +55,15 @@ export function evaluate(node: Node, env: Environment): MonkeyObject {
     }
 
     if (node instanceof IntegerLiteral) {
-        return new Integer(node.value);
+        return new MonkeyInteger(node.value);
     }
 
     if (node instanceof BooleanLiteral) {
         return node.value ? TRUE : FALSE;
+    }
+
+    if (node instanceof StringLiteral) {
+        return new MonkeyString(node.value);
     }
 
     if (node instanceof Identifier) {
@@ -235,11 +241,11 @@ function evaluateBangOperatorExpression(right: MonkeyObject): MonkeyObject {
 }
 
 function evaluateMinusPrefixOperatorExpression(right: MonkeyObject): MonkeyObject {
-    if (!(right instanceof Integer)) {
+    if (!(right instanceof MonkeyInteger)) {
         return new MonkeyError(`unknown operator: -${right.type()}`);
     }
 
-    return new Integer(-right.value);
+    return new MonkeyInteger(-right.value);
 }
 
 function evaluateInfixExpression(operator: string, left: MonkeyObject, right: MonkeyObject): MonkeyObject {
@@ -247,8 +253,10 @@ function evaluateInfixExpression(operator: string, left: MonkeyObject, right: Mo
         return new MonkeyError(`type mismatch: ${left.type()} ${operator} ${right.type()}`);
     }
 
-    if (left instanceof Integer && right instanceof Integer) {
+    if (left instanceof MonkeyInteger && right instanceof MonkeyInteger) {
         return evaluateIntegerInfixExpression(operator, left, right);
+    } else if (left instanceof MonkeyString && right instanceof MonkeyString) {
+        return evaluateStringInfixExpression(operator, left, right);
     }
 
     // just compare the objects directly, only integers need use their value
@@ -261,16 +269,16 @@ function evaluateInfixExpression(operator: string, left: MonkeyObject, right: Mo
     return new MonkeyError(`unknown operator: ${left.type()} ${operator} ${right.type()}`);
 }
 
-function evaluateIntegerInfixExpression(operator: string, left: Integer, right: Integer): MonkeyObject {
+function evaluateIntegerInfixExpression(operator: string, left: MonkeyInteger, right: MonkeyInteger): MonkeyObject {
     switch (operator) {
         case '+':
-            return new Integer(left.value + right.value);
+            return new MonkeyInteger(left.value + right.value);
         case '-':
-            return new Integer(left.value - right.value);
+            return new MonkeyInteger(left.value - right.value);
         case '*':
-            return new Integer(left.value * right.value);
+            return new MonkeyInteger(left.value * right.value);
         case '/':
-            return new Integer(left.value / right.value);
+            return new MonkeyInteger(left.value / right.value);
         case '<':
             return left.value < right.value ? TRUE : FALSE;
         case '>':
@@ -281,7 +289,25 @@ function evaluateIntegerInfixExpression(operator: string, left: Integer, right: 
             return left.value !== right.value ? TRUE : FALSE;
         default:
             // this branch will not be executed yet
-            return new MonkeyError(`unknown operator ${left.type()} ${operator} ${right.type()}`);
+            return new MonkeyError(`unknown operator: ${left.type()} ${operator} ${right.type()}`);
+    }
+}
+
+function evaluateStringInfixExpression(operator: string, left: MonkeyString, right: MonkeyString): MonkeyObject {
+    switch (operator) {
+        case '+':
+            return new MonkeyString(left.value + right.value);
+        // case '<':
+        //     return left.value < right.value ? TRUE : FALSE;
+        // case '>':
+        //     return left.value > right.value ? TRUE : FALSE;
+        case '==':
+            return left.value === right.value ? TRUE : FALSE;
+        case '!=':
+            return left.value !== right.value ? TRUE : FALSE;
+        default:
+            // this branch will not be executed yet
+            return new MonkeyError(`unknown operator: ${left.type()} ${operator} ${right.type()}`);
     }
 }
 
