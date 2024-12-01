@@ -21,12 +21,14 @@ import {
     MonkeyInteger,
     ReturnValue,
     MonkeyError,
+    MonkeyFunction,
+    MonkeyString,
     TRUE,
     FALSE,
     NULL,
-    MonkeyFunction,
-    MonkeyString,
+    MonkeyBuiltinFunction,
 } from './object';
+import { builtins } from './builtins';
 import { Environment, EnclosedEnvironment } from './environment';
 
 export function evaluate(node: Node, env: Environment): MonkeyObject {
@@ -192,13 +194,15 @@ function evaluateExpressions(expressions: Expression[], env: Environment): Monke
 }
 
 function applyFunction(fn: MonkeyObject, args: MonkeyObject[]) {
-    if (!(fn instanceof MonkeyFunction)) {
+    if (fn instanceof MonkeyFunction) {
+        const extendEnv = extendFunctionEnv(fn, args);
+        const evaluated = evaluate(fn.body, extendEnv);
+        return unwrapReturnValue(evaluated);
+    } else if (fn instanceof MonkeyBuiltinFunction) {
+        return fn.fn(...args);
+    } else {
         return new MonkeyError(`Not a function: ${fn.type}`);
     }
-
-    const extendEnv = extendFunctionEnv(fn, args);
-    const evaluated = evaluate(fn.body, extendEnv);
-    return unwrapReturnValue(evaluated);
 }
 
 function extendFunctionEnv(fn: MonkeyFunction, args: MonkeyObject[]) {
@@ -316,5 +320,10 @@ function evaluateIdentifier(node: Identifier, env: Environment): MonkeyObject {
     if (value) {
         return value;
     }
+
+    if (builtins.has(node.value)) {
+        return builtins.get(node.value) as MonkeyObject;
+    }
+
     return new MonkeyError(`identifier not found: ${node.value}`);
 }

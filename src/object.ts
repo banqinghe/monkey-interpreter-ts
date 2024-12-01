@@ -8,6 +8,7 @@ type MonkeyObjectType =
     | 'RETURN'
     | 'ERROR'
     | 'FUNCTION'
+    | 'BUILTIN'
     | 'STRING';
 
 const INTEGER_OBJ = 'INTEGER';
@@ -16,6 +17,7 @@ const NULL_OBJ = 'NULL';
 const RETURN_VALUE_OBJ = 'RETURN';
 const ERROR_OBJ = 'ERROR';
 const FUNCTION_OBJ = 'FUNCTION';
+const BUILTIN_OBJ = 'BUILTIN';
 const STRING_OBJ = 'STRING';
 
 export interface MonkeyObject {
@@ -84,6 +86,18 @@ export class MonkeyFunction implements MonkeyObject {
 
     type(): MonkeyObjectType {
         return FUNCTION_OBJ;
+    }
+}
+
+export class MonkeyBuiltinFunction implements MonkeyObject {
+    constructor(readonly fn: (...args: MonkeyObject[]) => MonkeyObject) {}
+
+    inspect(): string {
+        return 'builtin function';
+    }
+
+    type(): MonkeyObjectType {
+        return BUILTIN_OBJ;
     }
 }
 

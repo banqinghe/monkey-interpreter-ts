@@ -277,4 +277,25 @@ describe('evaluator', () => {
         const evaluated = testEval(input);
         testIntegerObject(evaluated, 5);
     });
+
+    test('builtin function: len', () => {
+        const tests = [
+            { input: 'len("")', expected: 0 },
+            { input: 'len("four")', expected: 4 },
+            { input: 'len("hello world")', expected: 11 },
+            { input: 'len(1)', expected: 'argument to `len` not supported, got=INTEGER' },
+            { input: 'len("one", "two")', expected: 'wrong number of arguments. got=2, want=1' },
+        ];
+
+        for (const test of tests) {
+            const evaluated = testEval(test.input);
+
+            if (evaluated.type() === 'INTEGER') {
+                testIntegerObject(evaluated, test.expected as number);
+            } else {
+                assert.ok(evaluated instanceof MonkeyError, `no error object returned. got=${JSON.stringify(evaluated)}`);
+                assert.strictEqual(evaluated.message, test.expected, 'wrong error message');
+            }
+        }
+    });
 });
