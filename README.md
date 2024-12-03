@@ -1,4 +1,4 @@
-# Monkey Programming Language interpreter written in TypeScript
+# monkey-interpreter-ts
 
 This is a TypeScript implementation of the [Monkey Programming Language](https://monkeylang.org/) interpreter, as described in the book *Writing An Interpreter In Go* by Thorsten Ball.
 
