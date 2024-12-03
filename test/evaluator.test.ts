@@ -2,7 +2,7 @@ import assert from 'node:assert';
 import { test, describe } from 'node:test';
 import Lexer from '../src/lexer';
 import Parser from '../src/parser';
-import { MonkeyObject, MonkeyInteger, MonkeyBoolean, NULL, MonkeyError, MonkeyFunction, MonkeyString } from '../src/object';
+import { MonkeyObject, MonkeyInteger, MonkeyBoolean, NULL, MonkeyError, MonkeyFunction, MonkeyString, MonkeyArray } from '../src/object';
 import { evaluate } from '../src/evaluator';
 import { Environment } from '../src/environment';
 
@@ -26,6 +26,34 @@ function testBooleanObject(obj: MonkeyObject, expected: boolean) {
 function testStringObject(obj: MonkeyObject, expected: string) {
     assert.ok(obj instanceof MonkeyString, 'obj is not String');
     assert.strictEqual(obj.value, expected);
+}
+
+function testArrayObject(obj: MonkeyObject, expected: any[]) {
+    assert.ok(obj instanceof MonkeyArray, 'obj is not Array');
+
+    assert.strictEqual(obj.elements.length, expected.length);
+    for (let i = 0; i < expected.length; i++) {
+        switch (typeof expected[i]) {
+            case 'number':
+                testIntegerObject(obj.elements[i], expected[i]);
+                break;
+            case 'string':
+                testStringObject(obj.elements[i], expected[i]);
+                break;
+            case 'boolean':
+                testBooleanObject(obj.elements[i], expected[i]);
+                break;
+            case 'object':
+                if (Array.isArray(expected[i])) {
+                    testArrayObject(obj.elements[i], expected[i]);
+                    break;
+                } else {
+                    throw new Error(`unexpected type: ${typeof expected[i]}`);
+                }
+            default:
+                throw new Error(`unexpected type: ${typeof expected[i]}`);
+        }
+    }
 }
 
 function testNullObject(obj: MonkeyObject) {
@@ -278,13 +306,21 @@ describe('evaluator', () => {
         testIntegerObject(evaluated, 5);
     });
 
-    test('builtin function: len', () => {
+    test('builtin functions', () => {
         const tests = [
             { input: 'len("")', expected: 0 },
             { input: 'len("four")', expected: 4 },
             { input: 'len("hello world")', expected: 11 },
             { input: 'len(1)', expected: 'argument to `len` not supported, got=INTEGER' },
             { input: 'len("one", "two")', expected: 'wrong number of arguments. got=2, want=1' },
+            { input: 'len([1, 2, 3])', expected: 3 },
+            { input: 'len([])', expected: 0 },
+            { input: 'first([])', expected: NULL },
+            { input: 'first([1, 2, 3])', expected: 1 },
+            { input: 'last([])', expected: NULL },
+            { input: 'last([1, 2, 3])', expected: 3 },
+            { input: 'rest([])', expected: NULL },
+            { input: 'rest([1, 2, 3])', expected: [2, 3] },
         ];
 
         for (const test of tests) {
@@ -292,9 +328,58 @@ describe('evaluator', () => {
 
             if (evaluated.type() === 'INTEGER') {
                 testIntegerObject(evaluated, test.expected as number);
+            } else if (evaluated.type() === 'NULL') {
+                assert.strictEqual(evaluated, NULL, `object is not NULL. got=${JSON.stringify(evaluated)}`);
+            } else if (Array.isArray(test.expected)) {
+                testArrayObject(evaluated, test.expected);
             } else {
                 assert.ok(evaluated instanceof MonkeyError, `no error object returned. got=${JSON.stringify(evaluated)}`);
                 assert.strictEqual(evaluated.message, test.expected, 'wrong error message');
+            }
+        }
+    });
+
+    test('builtin function - push', () => {
+        const input = `
+            let a = [1, 2];
+            let b = push(a, 3);
+            [a, b];
+        `;
+        const evaluated = testEval(input);
+
+        testArrayObject(evaluated, [[1, 2], [1, 2, 3]]);
+    });
+
+    test('array literal', () => {
+        const input = '[1, 2 * 2, 3 + 3]';
+        const evaluated = testEval(input);
+        assert.ok(evaluated instanceof MonkeyArray, `object not Array. got=${JSON.stringify(evaluated)}`);
+        assert.strictEqual(evaluated.elements.length, 3, `array has wrong num of elements. got=${evaluated.elements.length}`);
+        testIntegerObject(evaluated.elements[0], 1);
+        testIntegerObject(evaluated.elements[1], 4);
+        testIntegerObject(evaluated.elements[2], 6);
+    });
+
+    test('index expression', () => {
+        const tests = [
+            { input: '[1, 2, 3][0]', expected: 1 },
+            { input: '[1, 2, 3][1]', expected: 2 },
+            { input: '[1, 2, 3][2]', expected: 3 },
+            { input: 'let i = 0; [1][i];', expected: 1 },
+            { input: '[1, 2, 3][1 + 1];', expected: 3 },
+            { input: 'let myArray = [1, 2, 3]; myArray[2];', expected: 3 },
+            { input: 'let myArray = [1, 2, 3]; myArray[0] + myArray[1] + myArray[2];', expected: 6 },
+            { input: 'let myArray = [1, 2, 3]; let i = myArray[0]; myArray[i];', expected: 2 },
+            { input: '[1, 2, 3][3]', expected: null },
+            { input: '[1, 2, 3][-1]', expected: null },
+        ];
+
+        for (const test of tests) {
+            const evaluated = testEval(test.input);
+            if (typeof test.expected === 'number') {
+                testIntegerObject(evaluated, test.expected);
+            } else {
+                testNullObject(evaluated);
             }
         }
     });

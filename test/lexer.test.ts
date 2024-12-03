@@ -153,16 +153,31 @@ describe('lexer', () => {
     });
 
     test('string', () => {
-        // "foobar"
-        // "foo bar"
         const input = `
+            "foobar"
+            "foo bar"
             "dog\\"cat"
         `;
 
         const tests = [
-            // { expectedType: Token.STRING, expectedLiteral: 'foobar' },
-            // { expectedType: Token.STRING, expectedLiteral: 'foo bar' },
+            { expectedType: Token.STRING, expectedLiteral: 'foobar' },
+            { expectedType: Token.STRING, expectedLiteral: 'foo bar' },
             { expectedType: Token.STRING, expectedLiteral: 'dog"cat' },
+            { expectedType: Token.EOF, expectedLiteral: '' },
+        ];
+
+        assertTokens(input, tests);
+    });
+
+    test('array', () => {
+        const input = '[a, 2];';
+        const tests = [
+            { expectedType: Token.LBRACKET, expectedLiteral: '[' },
+            { expectedType: Token.IDENT, expectedLiteral: 'a' },
+            { expectedType: Token.COMMA, expectedLiteral: ',' },
+            { expectedType: Token.INT, expectedLiteral: '2' },
+            { expectedType: Token.RBRACKET, expectedLiteral: ']' },
+            { expectedType: Token.SEMICOLON, expectedLiteral: ';' },
             { expectedType: Token.EOF, expectedLiteral: '' },
         ];
 

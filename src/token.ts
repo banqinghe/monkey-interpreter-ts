@@ -18,6 +18,8 @@ export type TokenType =
     | 'LPAREN'
     | 'RPAREN'
     | 'LBRACE'
+    | 'LBRACKET'
+    | 'RBRACKET'
     | 'RBRACE'
     | 'FUNCTION'
     | 'LET'
@@ -67,6 +69,8 @@ export default class Token {
     static RPAREN: TokenType = 'RPAREN';
     static LBRACE: TokenType = 'LBRACE';
     static RBRACE: TokenType = 'RBRACE';
+    static LBRACKET: TokenType = 'LBRACKET';
+    static RBRACKET: TokenType = 'RBRACKET';
 
     // keywords
     static FUNCTION: TokenType = 'FUNCTION';

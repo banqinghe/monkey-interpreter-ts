@@ -1,6 +1,7 @@
 import assert from 'node:assert';
 import { test, describe } from 'node:test';
 import {
+    ArrayLiteral,
     BooleanLiteral,
     CallExpression,
     Expression,
@@ -8,6 +9,7 @@ import {
     FunctionLiteral,
     Identifier,
     IfExpression,
+    IndexExpression,
     InfixExpression,
     IntegerLiteral,
     LetStatement,
@@ -219,6 +221,11 @@ describe('parser', () => {
             { input: 'a + add(b * c) + d', expected: '((a + add((b * c))) + d)' },
             { input: 'add(a, b, 1, 2 * 3, 4 + 5, add(6, 7 * 8))', expected: 'add(a, b, 1, (2 * 3), (4 + 5), add(6, (7 * 8)))' },
             { input: 'add(a + b + c * d / f + g)', expected: 'add((((a + b) + ((c * d) / f)) + g))' },
+            { input: '[1, 2, 3][1]', expected: '([1, 2, 3][1])' },
+            { input: 'a[1 + 1]', expected: '(a[(1 + 1)])' },
+            { input: 'arr[2 * 3]', expected: '(arr[(2 * 3)])' },
+            { input: 'arr[2 + 3][1]', expected: '((arr[(2 + 3)])[1])' },
+            { input: 'arr[2 + 3][1 + 1]', expected: '((arr[(2 + 3)])[(1 + 1)])' },
         ];
 
         for (const t of tests) {
@@ -343,6 +350,46 @@ describe('parser', () => {
                 assert.strictEqual(callExpression.args[i].toString(), t.expectedParams[i]);
             }
         }
+    });
+
+    test('array literal', () => {
+        const input = '[1, 2 * 2, 3 + 3]';
+        const lexer = new Lexer(input);
+        const parser = new Parser(lexer);
+        const program = parser.parseProgram();
+        checkParserErrors(parser);
+
+        assert.strictEqual(program.statements.length, 1);
+
+        const statement = program.statements[0] as ExpressionStatement;
+        assert.ok(statement instanceof ExpressionStatement);
+
+        const array = statement.expression as ArrayLiteral;
+        assert.ok(array instanceof ArrayLiteral);
+
+        assert.strictEqual(array.elements.length, 3);
+        testIntegerLiteral(array.elements[0], 1);
+        testInfixExpression(array.elements[1], 2, '*', 2);
+        testInfixExpression(array.elements[2], 3, '+', 3);
+    });
+
+    test('index expression', () => {
+        const input = 'arr[1 + 1];';
+        const lexer = new Lexer(input);
+        const parser = new Parser(lexer);
+        const program = parser.parseProgram();
+        checkParserErrors(parser);
+
+        assert.strictEqual(program.statements.length, 1);
+
+        const statement = program.statements[0] as ExpressionStatement;
+        assert.ok(statement instanceof ExpressionStatement);
+
+        const indexExpression = statement.expression as IndexExpression;
+        assert.ok(indexExpression instanceof IndexExpression);
+
+        testIdentifier(indexExpression.left, 'arr');
+        testInfixExpression(indexExpression.index, 1, '+', 1);
     });
 });
 

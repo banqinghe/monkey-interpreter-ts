@@ -62,7 +62,8 @@ function start() {
                     throw new Error('Parsing failed');
                 }
 
-                console.log(green(program.toString()));
+                const evaluated = evaluate(program, env);
+                print(evaluated.inspect());
             } catch (error) {
                 console.error(`Error loading file: ${error}`);
             }

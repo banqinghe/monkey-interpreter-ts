@@ -1,4 +1,5 @@
 import {
+    ArrayLiteral,
     BlockStatement,
     BooleanLiteral,
     CallExpression,
@@ -7,6 +8,7 @@ import {
     FunctionLiteral,
     Identifier,
     IfExpression,
+    IndexExpression,
     InfixExpression,
     IntegerLiteral,
     LetStatement,
@@ -27,6 +29,7 @@ import {
     FALSE,
     NULL,
     MonkeyBuiltinFunction,
+    MonkeyArray,
 } from './object';
 import { builtins } from './builtins';
 import { Environment, EnclosedEnvironment } from './environment';
@@ -66,6 +69,14 @@ export function evaluate(node: Node, env: Environment): MonkeyObject {
 
     if (node instanceof StringLiteral) {
         return new MonkeyString(node.value);
+    }
+
+    if (node instanceof ArrayLiteral) {
+        const elements = evaluateExpressions(node.elements, env);
+        if (elements.length === 1 && isMonkeyError(elements[0])) {
+            return elements[0];
+        }
+        return new MonkeyArray(elements);
     }
 
     if (node instanceof Identifier) {
@@ -108,6 +119,18 @@ export function evaluate(node: Node, env: Environment): MonkeyObject {
             return right;
         }
         return evaluateInfixExpression(node.operator, left, right);
+    }
+
+    if (node instanceof IndexExpression) {
+        const left = evaluate(node.left, env);
+        if (isMonkeyError(left)) {
+            return left;
+        }
+        const index = evaluate(node.index, env);
+        if (isMonkeyError(index)) {
+            return index;
+        }
+        return evaluateIndexExpression(left, index);
     }
 
     if (node instanceof BlockStatement) {
@@ -326,4 +349,26 @@ function evaluateIdentifier(node: Identifier, env: Environment): MonkeyObject {
     }
 
     return new MonkeyError(`identifier not found: ${node.value}`);
+}
+
+function evaluateIndexExpression(left: MonkeyObject, index: MonkeyObject): MonkeyObject {
+    if (left instanceof MonkeyArray && index instanceof MonkeyInteger) {
+        return evaluateArrayIndexExpression(left, index);
+    }
+    //  else if (left instanceof MonkeyHash) {
+    //     return evaluateHashIndexExpression(left, index);
+    // }
+
+    return new MonkeyError(`index operator not supported: ${left.type()}`);
+}
+
+function evaluateArrayIndexExpression(array: MonkeyArray, index: MonkeyInteger): MonkeyObject {
+    const idx = index.value;
+    const max = array.elements.length - 1;
+
+    if (idx < 0 || idx > max) {
+        return NULL;
+    }
+
+    return array.elements[idx];
 }

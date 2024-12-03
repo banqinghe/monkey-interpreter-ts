@@ -9,16 +9,18 @@ type MonkeyObjectType =
     | 'ERROR'
     | 'FUNCTION'
     | 'BUILTIN'
-    | 'STRING';
+    | 'STRING'
+    | 'ARRAY';
 
-const INTEGER_OBJ = 'INTEGER';
-const BOOLEAN_OBJ = 'BOOLEAN';
-const NULL_OBJ = 'NULL';
-const RETURN_VALUE_OBJ = 'RETURN';
-const ERROR_OBJ = 'ERROR';
-const FUNCTION_OBJ = 'FUNCTION';
-const BUILTIN_OBJ = 'BUILTIN';
-const STRING_OBJ = 'STRING';
+export const INTEGER_OBJ = 'INTEGER';
+export const BOOLEAN_OBJ = 'BOOLEAN';
+export const NULL_OBJ = 'NULL';
+export const RETURN_VALUE_OBJ = 'RETURN';
+export const ERROR_OBJ = 'ERROR';
+export const FUNCTION_OBJ = 'FUNCTION';
+export const BUILTIN_OBJ = 'BUILTIN';
+export const STRING_OBJ = 'STRING';
+export const ARRAY_OBJ = 'ARRAY';
 
 export interface MonkeyObject {
     type(): MonkeyObjectType;
@@ -58,6 +60,18 @@ export class MonkeyString implements MonkeyObject {
 
     type(): MonkeyObjectType {
         return STRING_OBJ;
+    }
+}
+
+export class MonkeyArray implements MonkeyObject {
+    constructor(readonly elements: MonkeyObject[]) {}
+
+    inspect(): string {
+        return `[${this.elements.map(el => el.inspect()).join(', ')}]`;
+    }
+
+    type(): MonkeyObjectType {
+        return ARRAY_OBJ;
     }
 }
 

@@ -153,6 +153,12 @@ export default class Lexer {
             case '}':
                 token = new Token(Token.RBRACE, this.ch);
                 break;
+            case '[':
+                token = new Token(Token.LBRACKET, this.ch);
+                break;
+            case ']':
+                token = new Token(Token.RBRACKET, this.ch);
+                break;
             case '"':
                 token = new Token(Token.STRING, this.readString());
                 break;
