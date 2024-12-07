@@ -1,6 +1,6 @@
 {
     "name": "monkey-parser",
-    "version": "0.0.1",
+    "version": "0.0.3",
     "description": "A Monkey Programming Language implementation in TypeScript",
     "author": "banqinghe",
     "license": "MIT",

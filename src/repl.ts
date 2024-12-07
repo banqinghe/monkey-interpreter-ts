@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import repl from 'node:repl';
 import fs from 'node:fs';
 import colors from 'picocolors';

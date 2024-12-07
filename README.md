@@ -4,6 +4,10 @@ This is a TypeScript implementation of the [Monkey Programming Language](https:/
 
 Most of the code for the interpreter itself is directly translated from Go to TypeScript, with some minor adjustments to fit the TypeScript environment.
 
+## Quick Start
+
+Just try executing `npx monkey-parser` in the shell, there will be a fully functional repl.
+
 ## Run
 
 Node.js >= 18
