@@ -2,7 +2,20 @@ import assert from 'node:assert';
 import { test, describe } from 'node:test';
 import Lexer from '../src/lexer';
 import Parser from '../src/parser';
-import { MonkeyObject, MonkeyInteger, MonkeyBoolean, NULL, MonkeyError, MonkeyFunction, MonkeyString, MonkeyArray } from '../src/object';
+import {
+    MonkeyObject,
+    MonkeyInteger,
+    MonkeyBoolean,
+    MonkeyError,
+    MonkeyFunction,
+    MonkeyString,
+    MonkeyArray,
+    MonkeyHash,
+    NULL,
+    HashKey,
+    TRUE,
+    FALSE,
+} from '../src/object';
 import { evaluate } from '../src/evaluator';
 import { Environment } from '../src/environment';
 
@@ -246,6 +259,7 @@ describe('evaluator', () => {
                 expected: 'unknown operator: BOOLEAN + BOOLEAN',
             },
             { input: '"a" - "b"', expected: 'unknown operator: STRING - STRING' },
+            { input: '{"name": "Monkey"}[fn(x) {x}];', expected: 'unusable as hash key: FUNCTION' },
         ];
 
         for (const test of tests) {
@@ -360,7 +374,41 @@ describe('evaluator', () => {
         testIntegerObject(evaluated.elements[2], 6);
     });
 
-    test('index expression', () => {
+    test('hash literals', () => {
+        const input = `
+            let two = "er";
+            {
+                "one": 10 - 9,
+                two: 1 + 1,
+                "thr" + "ee": 6 / 2,
+                4: 4,
+                true: 5,
+                false: 6
+            }
+        `;
+
+        const evaluated = testEval(input);
+        assert.ok(evaluated instanceof MonkeyHash, `object is not Hash. got=${JSON.stringify(evaluated)}`);
+
+        const expected: Array<[HashKey, number]> = [
+            [new MonkeyString('one').hashKey(), 1],
+            [new MonkeyString('er').hashKey(), 2],
+            [new MonkeyString('three').hashKey(), 3],
+            [new MonkeyInteger(4).hashKey(), 4],
+            [TRUE.hashKey(), 5],
+            [FALSE.hashKey(), 6],
+        ];
+
+        assert.strictEqual(evaluated.pairs.size, expected.length, `hash has wrong num of pairs. got=${evaluated.pairs.size}`);
+
+        for (const [expectedKey, expectedValue] of expected) {
+            const pair = evaluated.pairs.get(expectedKey);
+            assert.ok(pair, `no pair for given key in pairs`);
+            testIntegerObject(pair.value, expectedValue);
+        }
+    });
+
+    test('array index expression', () => {
         const tests = [
             { input: '[1, 2, 3][0]', expected: 1 },
             { input: '[1, 2, 3][1]', expected: 2 },
@@ -372,6 +420,27 @@ describe('evaluator', () => {
             { input: 'let myArray = [1, 2, 3]; let i = myArray[0]; myArray[i];', expected: 2 },
             { input: '[1, 2, 3][3]', expected: null },
             { input: '[1, 2, 3][-1]', expected: null },
+        ];
+
+        for (const test of tests) {
+            const evaluated = testEval(test.input);
+            if (typeof test.expected === 'number') {
+                testIntegerObject(evaluated, test.expected);
+            } else {
+                testNullObject(evaluated);
+            }
+        }
+    });
+
+    test('hash index expression', () => {
+        const tests = [
+            { input: '{"foo": 5}["foo"]', expected: 5 },
+            { input: '{"foo": 5}["bar"]', expected: null },
+            { input: 'let key = "foo"; {"foo": 6}[key]', expected: 6 },
+            { input: '{}["bar"]', expected: null },
+            { input: '{5: 7}[5]', expected: 7 },
+            { input: '{true: 8}[true]', expected: 8 },
+            { input: '{false: 9}[false]', expected: 9 },
         ];
 
         for (const test of tests) {

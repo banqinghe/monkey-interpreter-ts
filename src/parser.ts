@@ -8,6 +8,7 @@ import {
     Expression,
     ExpressionStatement,
     FunctionLiteral,
+    HashLiteral,
     Identifier,
     IfExpression,
     IndexExpression,
@@ -73,6 +74,7 @@ export default class Parser {
             [Token.IF, this.parseIfExpression.bind(this)],
             [Token.FUNCTION, this.parseFunctionLiteral.bind(this)],
             [Token.LBRACKET, this.parseArrayLiteral.bind(this)],
+            [Token.LBRACE, this.parseHashLiteral.bind(this)],
         ]);
         this.infixParseFns = new Map([
             [Token.PLUS, this.parseInfixExpression.bind(this)],
@@ -452,6 +454,35 @@ export default class Parser {
             token: this.curToken,
             elements: this.parseExpressionList(Token.RBRACKET),
         });
+    }
+
+    parseHashLiteral(): Expression {
+        const token = this.curToken;
+        const pairs: Array<{ key: Expression; value: Expression }> = [];
+
+        while (!this.peekTokenIs(Token.RBRACE)) {
+            this.nextToken();
+
+            const key = this.parseExpression(LOWEST);
+
+            if (!this.expectPeek(Token.COLON)) {
+                throw new Error(`parseHashLiteral: got ${this.peekToken.type} instead of COLON`);
+            }
+            this.nextToken();
+
+            const value = this.parseExpression(LOWEST);
+            pairs.push({ key, value });
+
+            if (!this.peekTokenIs(Token.RBRACE) && !this.expectPeek(Token.COMMA)) {
+                throw new Error(`parseHashLiteral: got ${this.peekToken.type} instead of RBRACE/COMMA`);
+            }
+        }
+
+        if (!this.expectPeek(Token.RBRACE)) {
+            throw new Error(`parseHashLiteral: got ${this.peekToken.type} instead of RBRACE`);
+        }
+
+        return new HashLiteral({ token, pairs });
     }
 
     parseIndexExpression(left: Expression): Expression {

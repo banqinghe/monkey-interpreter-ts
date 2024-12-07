@@ -122,7 +122,7 @@ export class BooleanLiteral implements Expression {
 }
 
 export class StringLiteral implements Expression {
-    type = 'IntegerLiteral';
+    type = 'StringLiteral';
     token: Token;
     value: string;
 
@@ -185,6 +185,27 @@ export class ArrayLiteral implements Expression {
     toString() {
         const elements = this.elements.map(e => e.toString()).join(', ');
         return `[${elements}]`;
+    }
+}
+
+export class HashLiteral implements Expression {
+    type = 'HashLiteral';
+    token: Token;
+    pairs: Array<{ key: Expression; value: Expression }>;
+
+    constructor({ token, pairs }: { token: Token; pairs: Array<{ key: Expression; value: Expression }> }) {
+        this.token = token;
+        this.pairs = pairs;
+    }
+
+    expressionNode() {}
+
+    tokenLiteral() {
+        return this.token.literal;
+    }
+
+    toString() {
+        return `{ ${this.pairs.map(({ key, value }) => `${key.toString()}: ${value.toString()}`).join(', ')} }`;
     }
 }
 

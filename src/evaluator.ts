@@ -6,6 +6,7 @@ import {
     Expression,
     ExpressionStatement,
     FunctionLiteral,
+    HashLiteral,
     Identifier,
     IfExpression,
     IndexExpression,
@@ -30,6 +31,10 @@ import {
     NULL,
     MonkeyBuiltinFunction,
     MonkeyArray,
+    HashPair,
+    HashKey,
+    Hashable,
+    MonkeyHash,
 } from './object';
 import { builtins } from './builtins';
 import { Environment, EnclosedEnvironment } from './environment';
@@ -77,6 +82,10 @@ export function evaluate(node: Node, env: Environment): MonkeyObject {
             return elements[0];
         }
         return new MonkeyArray(elements);
+    }
+
+    if (node instanceof HashLiteral) {
+        return evaluateHashLiteral(node, env);
     }
 
     if (node instanceof Identifier) {
@@ -351,13 +360,36 @@ function evaluateIdentifier(node: Identifier, env: Environment): MonkeyObject {
     return new MonkeyError(`identifier not found: ${node.value}`);
 }
 
+function evaluateHashLiteral(node: HashLiteral, env: Environment): MonkeyObject {
+    const pairs = new Map<HashKey, HashPair>();
+
+    for (const { key: keyNode, value: valueNode } of node.pairs) {
+        const key = evaluate(keyNode, env) as MonkeyObject & Hashable;
+
+        if (isMonkeyError(key)) {
+            return key;
+        }
+        if (!key.hashKey) {
+            return new MonkeyError(`unusable as hash key: ${key.type()}`);
+        }
+
+        const value = evaluate(valueNode, env);
+        if (isMonkeyError(value)) {
+            return value;
+        }
+
+        pairs.set(key.hashKey(), { key, value });
+    }
+
+    return new MonkeyHash(pairs);
+}
+
 function evaluateIndexExpression(left: MonkeyObject, index: MonkeyObject): MonkeyObject {
     if (left instanceof MonkeyArray && index instanceof MonkeyInteger) {
         return evaluateArrayIndexExpression(left, index);
+    } else if (left instanceof MonkeyHash) {
+        return evaluateHashIndexExpression(left, index);
     }
-    //  else if (left instanceof MonkeyHash) {
-    //     return evaluateHashIndexExpression(left, index);
-    // }
 
     return new MonkeyError(`index operator not supported: ${left.type()}`);
 }
@@ -371,4 +403,18 @@ function evaluateArrayIndexExpression(array: MonkeyArray, index: MonkeyInteger):
     }
 
     return array.elements[idx];
+}
+
+function evaluateHashIndexExpression(hash: MonkeyHash, index: MonkeyObject): MonkeyObject {
+    const key = index as MonkeyObject & Hashable;
+    if (!key.hashKey) {
+        return new MonkeyError(`unusable as hash key: ${index.type()}`);
+    }
+
+    const pair = hash.pairs.get(key.hashKey());
+    if (!pair) {
+        return NULL;
+    }
+
+    return pair.value;
 }

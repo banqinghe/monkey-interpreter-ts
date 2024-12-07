@@ -183,4 +183,18 @@ describe('lexer', () => {
 
         assertTokens(input, tests);
     });
+
+    test('map', () => {
+        const input = '{"foo": "bar"}';
+        const tests = [
+            { expectedType: Token.LBRACE, expectedLiteral: '{' },
+            { expectedType: Token.STRING, expectedLiteral: 'foo' },
+            { expectedType: Token.COLON, expectedLiteral: ':' },
+            { expectedType: Token.STRING, expectedLiteral: 'bar' },
+            { expectedType: Token.RBRACE, expectedLiteral: '}' },
+            { expectedType: Token.EOF, expectedLiteral: '' },
+        ];
+
+        assertTokens(input, tests);
+    });
 });

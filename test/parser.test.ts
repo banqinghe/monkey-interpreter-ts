@@ -7,6 +7,7 @@ import {
     Expression,
     ExpressionStatement,
     FunctionLiteral,
+    HashLiteral,
     Identifier,
     IfExpression,
     IndexExpression,
@@ -373,6 +374,83 @@ describe('parser', () => {
         testInfixExpression(array.elements[2], 3, '+', 3);
     });
 
+    test('hash literal', () => {
+        const input = '{"one": 1, "two": 2, "three": 3}';
+        const lexer = new Lexer(input);
+        const parser = new Parser(lexer);
+        const program = parser.parseProgram();
+        checkParserErrors(parser);
+
+        assert.strictEqual(program.statements.length, 1);
+
+        const statement = program.statements[0] as ExpressionStatement;
+        assert.ok(statement instanceof ExpressionStatement);
+
+        const hash = statement.expression as HashLiteral;
+        assert.ok(hash instanceof HashLiteral);
+
+        const expected = [
+            { key: 'one', value: 1 },
+            { key: 'two', value: 2 },
+            { key: 'three', value: 3 },
+        ];
+
+        for (let i = 0; i < expected.length; i++) {
+            const key = hash.pairs[i].key;
+            const value = hash.pairs[i].value;
+
+            testStringLiteral(key, expected[i].key);
+            testIntegerLiteral(value, expected[i].value);
+        }
+    });
+
+    test('empty hash literal', () => {
+        const input = '{}';
+        const lexer = new Lexer(input);
+        const parser = new Parser(lexer);
+        const program = parser.parseProgram();
+        checkParserErrors(parser);
+
+        assert.strictEqual(program.statements.length, 1);
+
+        const statement = program.statements[0] as ExpressionStatement;
+        assert.ok(statement instanceof ExpressionStatement);
+
+        const hash = statement.expression as HashLiteral;
+        assert.ok(hash instanceof HashLiteral);
+
+        assert.strictEqual(hash.pairs.length, 0);
+    });
+
+    test('hash literal with expressions', () => {
+        const input = '{"one": 0 + 1, "two": 10 - 8, "three": 15 / 5}';
+        const lexer = new Lexer(input);
+        const parser = new Parser(lexer);
+        const program = parser.parseProgram();
+        checkParserErrors(parser);
+
+        assert.strictEqual(program.statements.length, 1);
+
+        const statement = program.statements[0] as ExpressionStatement;
+        assert.ok(statement instanceof ExpressionStatement);
+
+        const hash = statement.expression as HashLiteral;
+        assert.ok(hash instanceof HashLiteral);
+
+        const expected = [
+            { key: 'one', testValue: (exp: Expression) => testInfixExpression(exp, 0, '+', 1) },
+            { key: 'two', testValue: (exp: Expression) => testInfixExpression(exp, 10, '-', 8) },
+            { key: 'three', testValue: (exp: Expression) => testInfixExpression(exp, 15, '/', 5) },
+        ];
+
+        for (let i = 0; i < expected.length; i++) {
+            const key = hash.pairs[i].key;
+            const value = hash.pairs[i].value;
+            testStringLiteral(key, expected[i].key);
+            expected[i].testValue(value);
+        }
+    });
+
     test('index expression', () => {
         const input = 'arr[1 + 1];';
         const lexer = new Lexer(input);
@@ -419,6 +497,12 @@ function testIdentifier(expression: Expression, value: string) {
     assert.ok(expression instanceof Identifier);
     assert.strictEqual((expression as Identifier).value, value);
     assert.strictEqual((expression as Identifier).tokenLiteral(), value);
+}
+
+function testStringLiteral(expression: Expression, value: string) {
+    assert.ok(expression instanceof StringLiteral);
+    assert.strictEqual((expression as StringLiteral).value, value);
+    assert.strictEqual((expression as StringLiteral).tokenLiteral(), value);
 }
 
 function testLiteralExpression(expression: Expression, expected: any) {

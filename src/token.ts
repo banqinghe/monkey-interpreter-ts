@@ -14,6 +14,7 @@ export type TokenType =
     | 'EQ'
     | 'NOT_EQ'
     | 'COMMA'
+    | 'COLON'
     | 'SEMICOLON'
     | 'LPAREN'
     | 'RPAREN'
@@ -63,6 +64,7 @@ export default class Token {
 
     // delimiters
     static COMMA: TokenType = 'COMMA';
+    static COLON: TokenType = 'COLON';
     static SEMICOLON: TokenType = 'SEMICOLON';
 
     static LPAREN: TokenType = 'LPAREN';

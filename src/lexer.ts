@@ -109,6 +109,9 @@ export default class Lexer {
                     token = new Token(Token.ASSIGN, this.ch);
                 }
                 break;
+            case ':':
+                token = new Token(Token.COLON, this.ch);
+                break;
             case ';':
                 token = new Token(Token.SEMICOLON, this.ch);
                 break;
