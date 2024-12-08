@@ -73,9 +73,18 @@ export default class Lexer {
 
         while (true) {
             this.readChar();
-            if (this.ch === '\\' && this.peekChar() === '"') {
+            if (this.ch === '\\' && this.peekChar() === '\\') {
+                this.readChar();
+                chars.push('\\');
+            } else if (this.ch === '\\' && this.peekChar() === '"') {
                 this.readChar();
                 chars.push('"');
+            } else if (this.ch === '\\' && this.peekChar() === 'n') {
+                this.readChar();
+                chars.push('\n');
+            } else if (this.ch === '\\' && this.peekChar() === 't') {
+                this.readChar();
+                chars.push('\t');
             } else if (this.ch === '"') {
                 break;
             } else if (this.ch === '') {

@@ -157,12 +157,20 @@ describe('lexer', () => {
             "foobar"
             "foo bar"
             "dog\\"cat"
+            "dog\\cat"
+            "dog\\\\cat"
+            "dog\\ncat"
+            "dog\\tcat"
         `;
 
         const tests = [
             { expectedType: Token.STRING, expectedLiteral: 'foobar' },
             { expectedType: Token.STRING, expectedLiteral: 'foo bar' },
             { expectedType: Token.STRING, expectedLiteral: 'dog"cat' },
+            { expectedType: Token.STRING, expectedLiteral: 'dog\\cat' },
+            { expectedType: Token.STRING, expectedLiteral: 'dog\\cat' },
+            { expectedType: Token.STRING, expectedLiteral: 'dog\ncat' },
+            { expectedType: Token.STRING, expectedLiteral: 'dog\tcat' },
             { expectedType: Token.EOF, expectedLiteral: '' },
         ];
 
