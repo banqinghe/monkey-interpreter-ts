@@ -1,48 +1,47 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useDeferredValue } from 'react';
 import cn from 'classnames';
-import { Alert, SegmentedControl } from '@mantine/core';
+import { Alert, SegmentedControl, NativeSelect } from '@mantine/core';
 import CodeMirror from '@uiw/react-codemirror';
 import { githubLight } from '@uiw/codemirror-theme-github';
+import { javascript } from '@codemirror/lang-javascript';
 import { json } from '@codemirror/lang-json';
 import { PanelGroup, Panel, PanelResizeHandle } from 'react-resizable-panels';
 import { IconError, IconGithub } from './icons';
-import { parser } from './monkey';
+import { evaluate } from './monkey';
+import examples from './examples';
 
 function togglePanelDirection(width: number) {
     return width < 640 ? 'vertical' : 'horizontal';
 }
 
-const defaultCode = `let fibonacci = fn(x) {
-    if (x == 0) {
-        0
-    } else {
-        if (x == 1) {
-            return 1;
-        } else {
-            fibonacci(x - 1) + fibonacci(x - 2);
-        }
-    }
-};
-`;
+const exampleKeys = Object.keys(examples);
+
+const defaultCode = examples[exampleKeys[0]];
 
 export default function App() {
-    const [activeKey, setActiveKey] = useState('AST');
+    const [activeKey, setActiveKey] = useState('OUTPUT');
     const [panelDirection, setPanelDirection] = useState<'vertical' | 'horizontal'>(() => togglePanelDirection(window.innerWidth));
 
     const [code, setCode] = useState(defaultCode);
     const [ast, setAst] = useState('');
     const [errMsg, setErrMsg] = useState('');
     const [output, setOutput] = useState('');
+    const [time, setTime] = useState(0);
+
+    const deferredCode = useDeferredValue(code);
 
     useEffect(() => {
         let astStr = '{}';
         let err;
+        let evaluatedValue = '';
 
         try {
-            const [program, parserErrors] = parser(code);
-            astStr = JSON.stringify(program, null, 2);
-            if (parserErrors.length > 0) {
-                throw new Error(parserErrors.join('\n'));
+            const { ast, output, errors, time } = evaluate(deferredCode);
+            astStr = JSON.stringify(ast, null, 2);
+            evaluatedValue = output;
+            setTime(time);
+            if (errors.length > 0) {
+                throw new Error(errors.join('\n'));
             }
         } catch (e: any) {
             err = e;
@@ -54,11 +53,11 @@ export default function App() {
             setOutput(err.toString());
         } else {
             setErrMsg('');
-            setOutput('');
+            setOutput(evaluatedValue);
         }
 
         setAst(astStr);
-    }, [code]);
+    }, [deferredCode]);
 
     useEffect(() => {
         const handleResize = () => setPanelDirection(togglePanelDirection(window.innerWidth));
@@ -75,6 +74,15 @@ export default function App() {
                         <h1 className="font-mono truncate">
                             Monkey Lang Playground
                         </h1>
+                        <NativeSelect
+                            classNames={{ root: 'ml-4' }}
+                            size="xs"
+                            data={exampleKeys}
+                            onChange={e => {
+                                setCode(examples[e.target.value] || defaultCode);
+                                console.log(e.target.value);
+                            }}
+                        />
                     </div>
                     <div className="">
                         <SegmentedControl
@@ -100,6 +108,7 @@ export default function App() {
                         theme={githubLight}
                         basicSetup={{ tabSize: 4 }}
                         value={code}
+                        extensions={[javascript()]}
                         onChange={val => setCode(val)}
                     />
                 </div>
@@ -141,11 +150,22 @@ export default function App() {
                         theme={githubLight}
                     />
                 </div>
-                <div className={cn('h-screen overflow-y-auto bg-slate-50 whitespace-pre-wrap', { hidden: activeKey !== 'OUTPUT' })}>
-                    {output}
+                <div
+                    className={cn(
+                        'h-screen p-4 pb-12 overflow-auto',
+                        { hidden: activeKey !== 'OUTPUT' },
+                    )}
+                >
+                    <pre>{output}</pre>
+                </div>
+                <div className="fixed bottom-0 w-full px-4 py-2 font-mono bg-white border-t">
+                    Execution completed in
+                    {' '}
+                    {time}
+                    ms
                 </div>
                 <a
-                    className="fixed bottom-2 right-2 rounded bg-white p-2 text-xl shadow"
+                    className="fixed bottom-12 right-6 rounded bg-white p-2 text-xl shadow"
                     href="https://github.com/banqinghe/monkey-interpreter-ts"
                     target="_blank"
                 >

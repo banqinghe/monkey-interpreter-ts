@@ -6,7 +6,7 @@ export default {
     ],
     theme: {
         fontFamily: {
-            mono: ['Consolas', 'ui-monospace'],
+            mono: ['Consolas', 'Source Code Pro', 'ui-monospace'],
         },
         extend: {},
     },
