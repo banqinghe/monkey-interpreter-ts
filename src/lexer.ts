@@ -97,6 +97,22 @@ export default class Lexer {
         return chars.join('');
     }
 
+    readComment(): string {
+        let comment = '';
+
+        this.readChar();
+
+        while (true) {
+            this.readChar();
+            if (this.ch === '' || this.ch === '\n') {
+                break;
+            }
+            comment += this.ch;
+        }
+
+        return comment;
+    }
+
     /** Skips whitespace characters */
     skipWhitespace() {
         while (this.ch === ' ' || this.ch === '\t' || this.ch === '\n' || this.ch === '\r') {
@@ -104,10 +120,22 @@ export default class Lexer {
         }
     }
 
+    skipWhitespaceAndComments() {
+        while (true) {
+            this.skipWhitespace();
+            if (this.ch === '/' && this.peekChar() === '/') {
+                // no processing of comments
+                this.readComment();
+            } else {
+                break;
+            }
+        }
+    }
+
     nextToken(): Token {
         let token: Token;
 
-        this.skipWhitespace();
+        this.skipWhitespaceAndComments();
 
         switch (this.ch) {
             case '=':

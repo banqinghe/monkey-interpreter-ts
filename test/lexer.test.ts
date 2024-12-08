@@ -205,4 +205,35 @@ describe('lexer', () => {
 
         assertTokens(input, tests);
     });
+
+    test('comment', () => {
+        const input = `
+            // BEGIN
+            let a = 10; // a is ten
+            let b = 20;
+            // c is here
+            let c = 30;
+            // END
+        `;
+        const tests = [
+            { expectedType: Token.LET, expectedLiteral: 'let' },
+            { expectedType: Token.IDENT, expectedLiteral: 'a' },
+            { expectedType: Token.ASSIGN, expectedLiteral: '=' },
+            { expectedType: Token.INT, expectedLiteral: '10' },
+            { expectedType: Token.SEMICOLON, expectedLiteral: ';' },
+            { expectedType: Token.LET, expectedLiteral: 'let' },
+            { expectedType: Token.IDENT, expectedLiteral: 'b' },
+            { expectedType: Token.ASSIGN, expectedLiteral: '=' },
+            { expectedType: Token.INT, expectedLiteral: '20' },
+            { expectedType: Token.SEMICOLON, expectedLiteral: ';' },
+            { expectedType: Token.LET, expectedLiteral: 'let' },
+            { expectedType: Token.IDENT, expectedLiteral: 'c' },
+            { expectedType: Token.ASSIGN, expectedLiteral: '=' },
+            { expectedType: Token.INT, expectedLiteral: '30' },
+            { expectedType: Token.SEMICOLON, expectedLiteral: ';' },
+            { expectedType: Token.EOF, expectedLiteral: '' },
+        ];
+
+        assertTokens(input, tests);
+    });
 });
