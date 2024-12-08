@@ -109,14 +109,7 @@ function push(...args: MonkeyObject[]): MonkeyObject {
 }
 
 function puts(...args: MonkeyObject[]): MonkeyObject {
-    for (const arg of args) {
-        const output = arg.inspect();
-        console.log(output);
-        if (typeof window !== 'undefined') {
-            // to be used in the playground
-            (window as any)?.monkeyPuts(output);
-        }
-    }
+    args.forEach(arg => console.log(arg.inspect()));
     return NULL;
 }
 
