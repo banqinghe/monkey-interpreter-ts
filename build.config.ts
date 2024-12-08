@@ -15,7 +15,6 @@ export default defineBuildConfig([
         entries: ['./src/repl'],
         outDir: 'dist',
         rollup: {
-            inlineDependencies: false,
             emitCJS: true,
         },
     },

@@ -2,16 +2,13 @@
 
 import repl from 'node:repl';
 import fs from 'node:fs';
-import colors from 'picocolors';
 import Lexer from './lexer';
 import Parser from './parser';
 import { evaluate } from './evaluator';
 import { Environment } from './environment';
 
-const { green } = colors;
-
 function print(text: string) {
-    console.log(green(text));
+    console.log('\x1b[32m' + text + '\x1b[39m');
 }
 
 function start() {
