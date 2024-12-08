@@ -267,7 +267,7 @@ export default class Parser {
     parseIntegerLiteral(): Expression {
         return new IntegerLiteral({
             token: this.curToken,
-            value: parseInt(this.curToken.literal),
+            value: this.curToken.literal,
         });
     }
 

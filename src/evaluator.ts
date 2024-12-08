@@ -65,7 +65,7 @@ export function evaluate(node: Node, env: Environment): MonkeyObject {
     }
 
     if (node instanceof IntegerLiteral) {
-        return new MonkeyInteger(node.value);
+        return new MonkeyInteger(BigInt(node.value));
     }
 
     if (node instanceof BooleanLiteral) {
@@ -402,7 +402,7 @@ function evaluateArrayIndexExpression(array: MonkeyArray, index: MonkeyInteger):
         return NULL;
     }
 
-    return array.elements[idx];
+    return array.elements[idx as unknown as number];
 }
 
 function evaluateHashIndexExpression(hash: MonkeyHash, index: MonkeyObject): MonkeyObject {

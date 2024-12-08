@@ -24,9 +24,9 @@ import Parser from '../src/parser';
 describe('parser', () => {
     test('let statement', () => {
         const tests = [
-            { input: 'let x = 5;', expectedIdentifier: 'x', expectedValue: 5 },
-            { input: 'let y = 10;', expectedIdentifier: 'y', expectedValue: 10 },
-            { input: 'let foobar = 838383;', expectedIdentifier: 'foobar', expectedValue: 838383 },
+            { input: 'let x = 5;', expectedIdentifier: 'x', expectedValue: '5' },
+            { input: 'let y = 10;', expectedIdentifier: 'y', expectedValue: '10' },
+            { input: 'let foobar = 838383;', expectedIdentifier: 'foobar', expectedValue: '838383' },
         ];
 
         for (const t of tests) {
@@ -41,16 +41,16 @@ describe('parser', () => {
 
             const letStatement = program.statements[0] as LetStatement;
 
-            testIdentifier(letStatement.name, t.expectedIdentifier);
+            testLiteralExpression(letStatement.name, t.expectedIdentifier);
             testLiteralExpression(letStatement.value, t.expectedValue);
         }
     });
 
     test('return statement', () => {
         const tests = [
-            { input: 'return 5', expectedValue: 5 },
-            { input: 'return 10', expectedValue: 10 },
-            { input: 'return 838383', expectedValue: 838383 },
+            { input: 'return 5', expectedValue: '5' },
+            { input: 'return 10', expectedValue: '10' },
+            { input: 'return 838383', expectedValue: '838383' },
         ];
 
         for (const t of tests) {
@@ -99,7 +99,7 @@ describe('parser', () => {
         const statement = program.statements[0] as ExpressionStatement;
 
         assert.strictEqual(statement.tokenLiteral(), '5');
-        assert.strictEqual((statement.expression as IntegerLiteral).value, 5);
+        assert.strictEqual((statement.expression as IntegerLiteral).value, '5');
     });
 
     test('boolean literal expression', () => {
@@ -135,8 +135,8 @@ describe('parser', () => {
 
     test('prefix expressions', () => {
         const tests = [
-            { input: '!5', operator: '!', integerValue: 5 },
-            { input: '-15', operator: '-', integerValue: 15 },
+            { input: '!5', operator: '!', integerValue: '5' },
+            { input: '-15', operator: '-', integerValue: '15' },
             { input: '!true', operator: '!', booleanValue: true },
             { input: '!false', operator: '!', booleanValue: false },
         ];
@@ -157,24 +157,20 @@ describe('parser', () => {
 
             assert.strictEqual(expression.operator, t.operator);
 
-            if (t.integerValue) {
-                testIntegerLiteral(expression.right!, t.integerValue);
-            } else if (t.booleanValue) {
-                testBooleanLiteral(expression.right!, t.booleanValue);
-            }
+            testLiteralExpression(expression.right!, t.integerValue || t.booleanValue);
         }
     });
 
     test('infix expressions - integer', () => {
         const tests = [
-            { input: '10086 + 5', leftValue: 10086, operator: '+', rightValue: 5 },
-            { input: '5 - 5', leftValue: 5, operator: '-', rightValue: 5 },
-            { input: '5 * 5', leftValue: 5, operator: '*', rightValue: 5 },
-            { input: '5 / 5', leftValue: 5, operator: '/', rightValue: 5 },
-            { input: '5 > 5', leftValue: 5, operator: '>', rightValue: 5 },
-            { input: '5 < 5', leftValue: 5, operator: '<', rightValue: 5 },
-            { input: '5 == 5', leftValue: 5, operator: '==', rightValue: 5 },
-            { input: '5 != 5', leftValue: 5, operator: '!=', rightValue: 5 },
+            { input: '10086 + 5', leftValue: '10086', operator: '+', rightValue: '5' },
+            { input: '5 - 5', leftValue: '5', operator: '-', rightValue: '5' },
+            { input: '5 * 5', leftValue: '5', operator: '*', rightValue: '5' },
+            { input: '5 / 5', leftValue: '5', operator: '/', rightValue: '5' },
+            { input: '5 > 5', leftValue: '5', operator: '>', rightValue: '5' },
+            { input: '5 < 5', leftValue: '5', operator: '<', rightValue: '5' },
+            { input: '5 == 5', leftValue: '5', operator: '==', rightValue: '5' },
+            { input: '5 != 5', leftValue: '5', operator: '!=', rightValue: '5' },
             { input: 'true == true', leftValue: true, operator: '==', rightValue: true },
             { input: 'true != false', leftValue: true, operator: '!=', rightValue: false },
             { input: 'false == false', leftValue: false, operator: '==', rightValue: false },
@@ -369,9 +365,9 @@ describe('parser', () => {
         assert.ok(array instanceof ArrayLiteral);
 
         assert.strictEqual(array.elements.length, 3);
-        testIntegerLiteral(array.elements[0], 1);
-        testInfixExpression(array.elements[1], 2, '*', 2);
-        testInfixExpression(array.elements[2], 3, '+', 3);
+        testLiteralExpression(array.elements[0], '1');
+        testInfixExpression(array.elements[1], '2', '*', '2');
+        testInfixExpression(array.elements[2], '3', '+', '3');
     });
 
     test('hash literal', () => {
@@ -390,9 +386,9 @@ describe('parser', () => {
         assert.ok(hash instanceof HashLiteral);
 
         const expected = [
-            { key: 'one', value: 1 },
-            { key: 'two', value: 2 },
-            { key: 'three', value: 3 },
+            { key: 'one', value: '1' },
+            { key: 'two', value: '2' },
+            { key: 'three', value: '3' },
         ];
 
         for (let i = 0; i < expected.length; i++) {
@@ -400,7 +396,7 @@ describe('parser', () => {
             const value = hash.pairs[i].value;
 
             testStringLiteral(key, expected[i].key);
-            testIntegerLiteral(value, expected[i].value);
+            testLiteralExpression(value, expected[i].value, true);
         }
     });
 
@@ -438,9 +434,9 @@ describe('parser', () => {
         assert.ok(hash instanceof HashLiteral);
 
         const expected = [
-            { key: 'one', testValue: (exp: Expression) => testInfixExpression(exp, 0, '+', 1) },
-            { key: 'two', testValue: (exp: Expression) => testInfixExpression(exp, 10, '-', 8) },
-            { key: 'three', testValue: (exp: Expression) => testInfixExpression(exp, 15, '/', 5) },
+            { key: 'one', testValue: (exp: Expression) => testInfixExpression(exp, '0', '+', '1') },
+            { key: 'two', testValue: (exp: Expression) => testInfixExpression(exp, '10', '-', '8') },
+            { key: 'three', testValue: (exp: Expression) => testInfixExpression(exp, '15', '/', '5') },
         ];
 
         for (let i = 0; i < expected.length; i++) {
@@ -467,7 +463,7 @@ describe('parser', () => {
         assert.ok(indexExpression instanceof IndexExpression);
 
         testIdentifier(indexExpression.left, 'arr');
-        testInfixExpression(indexExpression.index, 1, '+', 1);
+        testInfixExpression(indexExpression.index, '1', '+', '1');
     });
 });
 
@@ -481,7 +477,7 @@ function checkParserErrors(parser: Parser) {
     assert.strictEqual(errors.length, 0, `Parser has ${errors.length} errors`);
 }
 
-function testIntegerLiteral(expression: Expression, value: number) {
+function testIntegerLiteral(expression: Expression, value: string) {
     assert.ok(expression instanceof IntegerLiteral);
     assert.strictEqual((expression as IntegerLiteral).value, value);
     assert.strictEqual((expression as IntegerLiteral).tokenLiteral(), value.toString());
@@ -506,10 +502,12 @@ function testStringLiteral(expression: Expression, value: string) {
 }
 
 function testLiteralExpression(expression: Expression, expected: any) {
+    if (typeof expected === 'string' && /^\d+$/.test(expected)) {
+        testIntegerLiteral(expression, expected);
+        return;
+    }
+
     switch (typeof expected) {
-        case 'number':
-            testIntegerLiteral(expression, expected);
-            break;
         case 'string':
             testIdentifier(expression, expected);
             break;

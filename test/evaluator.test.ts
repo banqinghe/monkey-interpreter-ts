@@ -26,7 +26,7 @@ function testEval(input: string): MonkeyObject {
     return evaluate(program, new Environment());
 }
 
-function testIntegerObject(obj: MonkeyObject, expected: number) {
+function testIntegerObject(obj: MonkeyObject, expected: bigint) {
     assert.ok(obj instanceof MonkeyInteger, 'obj is not Integer');
     assert.strictEqual(obj.value, expected);
 }
@@ -47,7 +47,7 @@ function testArrayObject(obj: MonkeyObject, expected: any[]) {
     assert.strictEqual(obj.elements.length, expected.length);
     for (let i = 0; i < expected.length; i++) {
         switch (typeof expected[i]) {
-            case 'number':
+            case 'bigint':
                 testIntegerObject(obj.elements[i], expected[i]);
                 break;
             case 'string':
@@ -76,10 +76,10 @@ function testNullObject(obj: MonkeyObject) {
 describe('evaluator', () => {
     test('integer', () => {
         const tests = [
-            { input: '5', expected: 5 },
-            { input: '10', expected: 10 },
-            { input: '-5', expected: -5 },
-            { input: '-10', expected: -10 },
+            { input: '5', expected: 5n },
+            { input: '10', expected: 10n },
+            { input: '-5', expected: -5n },
+            { input: '-10', expected: -10n },
         ];
 
         for (const test of tests) {
@@ -126,21 +126,21 @@ describe('evaluator', () => {
 
     test('integer expression', () => {
         const tests = [
-            { input: '5', expected: 5 },
-            { input: '10', expected: 10 },
-            { input: '-5', expected: -5 },
-            { input: '-10', expected: -10 },
-            { input: '5 + 5 + 5 + 5 - 10', expected: 10 },
-            { input: '2 * 2 * 2 * 2 * 2', expected: 32 },
-            { input: '-50 + 100 + -50', expected: 0 },
-            { input: '5 * 2 + 10', expected: 20 },
-            { input: '5 + 2 * 10', expected: 25 },
-            { input: '20 + 2 * -10', expected: 0 },
-            { input: '50 / 2 * 2 + 10', expected: 60 },
-            { input: '2 * (5 + 10)', expected: 30 },
-            { input: '3 * 3 * 3 + 10', expected: 37 },
-            { input: '3 * (3 * 3) + 10', expected: 37 },
-            { input: '(5 + 10 * 2 + 15 / 3) * 2 + -10', expected: 50 },
+            { input: '5', expected: 5n },
+            { input: '10', expected: 10n },
+            { input: '-5', expected: -5n },
+            { input: '-10', expected: -10n },
+            { input: '5 + 5 + 5 + 5 - 10', expected: 10n },
+            { input: '2 * 2 * 2 * 2 * 2', expected: 32n },
+            { input: '-50 + 100 + -50', expected: 0n },
+            { input: '5 * 2 + 10', expected: 20n },
+            { input: '5 + 2 * 10', expected: 25n },
+            { input: '20 + 2 * -10', expected: 0n },
+            { input: '50 / 2 * 2 + 10', expected: 60n },
+            { input: '2 * (5 + 10)', expected: 30n },
+            { input: '3 * 3 * 3 + 10', expected: 37n },
+            { input: '3 * (3 * 3) + 10', expected: 37n },
+            { input: '(5 + 10 * 2 + 15 / 3) * 2 + -10', expected: 50n },
         ];
 
         for (const test of tests) {
@@ -190,18 +190,18 @@ describe('evaluator', () => {
 
     test('if else expressions', () => {
         const tests = [
-            { input: 'if (true) { 10 }', expected: 10 },
-            { input: 'if (false) { 10 } else { 20 }', expected: 20 },
-            { input: 'if (1 < 2) { 10 }', expected: 10 },
+            { input: 'if (true) { 10 }', expected: 10n },
+            { input: 'if (false) { 10 } else { 20 }', expected: 20n },
+            { input: 'if (1 < 2) { 10 }', expected: 10n },
             { input: 'if (1 > 2) { 10 }', expected: null },
-            { input: 'if (1 > 2) { 10 } else { 20 }', expected: 20 },
-            { input: 'if (1 == 1) { 10 }', expected: 10 },
+            { input: 'if (1 > 2) { 10 } else { 20 }', expected: 20n },
+            { input: 'if (1 == 1) { 10 }', expected: 10n },
             { input: 'if (1 != 1) { 10 }', expected: null },
-            { input: 'if (1 != 1) { 10 } else { 20 }', expected: 20 },
-            { input: 'if (1 == 1) { if (1 > 2) { 10 } else { 20 } }', expected: 20 },
-            { input: 'if (1 == 1) { if (1 < 2) { 10 } else { 20 } }', expected: 10 },
-            { input: 'if (1 == 1) { if (1 > 2) { 10 } else { 20 } } else { 30 }', expected: 20 },
-            { input: 'if (1 == 1) { if (1 < 2) { 10 } else { 20 } } else { 30 }', expected: 10 },
+            { input: 'if (1 != 1) { 10 } else { 20 }', expected: 20n },
+            { input: 'if (1 == 1) { if (1 > 2) { 10 } else { 20 } }', expected: 20n },
+            { input: 'if (1 == 1) { if (1 < 2) { 10 } else { 20 } }', expected: 10n },
+            { input: 'if (1 == 1) { if (1 > 2) { 10 } else { 20 } } else { 30 }', expected: 20n },
+            { input: 'if (1 == 1) { if (1 < 2) { 10 } else { 20 } } else { 30 }', expected: 10n },
         ];
 
         for (const test of tests) {
@@ -216,10 +216,10 @@ describe('evaluator', () => {
 
     test('return', () => {
         const tests = [
-            { input: 'return 10;', expected: 10 },
-            { input: 'return 3; 9;', expected: 3 },
-            { input: 'return 2 * 4; 9;', expected: 8 },
-            { input: '9; return 2 * 7; 9;', expected: 14 },
+            { input: 'return 10;', expected: 10n },
+            { input: 'return 3; 9;', expected: 3n },
+            { input: 'return 2 * 4; 9;', expected: 8n },
+            { input: '9; return 2 * 7; 9;', expected: 14n },
             {
                 input: `
                     if (10 > 1) {
@@ -229,7 +229,7 @@ describe('evaluator', () => {
                         return 1;
                     }
                 `,
-                expected: 10,
+                expected: 10n,
             },
         ];
 
@@ -271,10 +271,10 @@ describe('evaluator', () => {
 
     test('let statement', () => {
         const tests = [
-            { input: 'let a = 5; a;', expected: 5 },
-            { input: 'let a = 5 * 5; a;', expected: 25 },
-            { input: 'let a = 6; let b = a; b;', expected: 6 },
-            { input: 'let a = 7; let b = a; let c = a + b + 5; c;', expected: 19 },
+            { input: 'let a = 5; a;', expected: 5n },
+            { input: 'let a = 5 * 5; a;', expected: 25n },
+            { input: 'let a = 6; let b = a; b;', expected: 6n },
+            { input: 'let a = 7; let b = a; let c = a + b + 5; c;', expected: 19n },
         ];
 
         for (const test of tests) {
@@ -294,12 +294,12 @@ describe('evaluator', () => {
 
     test('function application', () => {
         const tests = [
-            { input: 'let identity = fn(x) { x; }; identity(5);', expected: 5 },
-            { input: 'let identity = fn(x) { return x; }; identity(6);', expected: 6 },
-            { input: 'let double = fn(x) { x * 2; }; double(7);', expected: 14 },
-            { input: 'let add = fn(x, y) { x + y; }; add(8, 9);', expected: 17 },
-            { input: 'let add = fn(x, y) { x + y; }; add(10 + 11, add(12, 13));', expected: 46 },
-            { input: 'fn(x) { x; }(14)', expected: 14 },
+            { input: 'let identity = fn(x) { x; }; identity(5);', expected: 5n },
+            { input: 'let identity = fn(x) { return x; }; identity(6);', expected: 6n },
+            { input: 'let double = fn(x) { x * 2; }; double(7);', expected: 14n },
+            { input: 'let add = fn(x, y) { x + y; }; add(8, 9);', expected: 17n },
+            { input: 'let add = fn(x, y) { x + y; }; add(10 + 11, add(12, 13));', expected: 46n },
+            { input: 'fn(x) { x; }(14)', expected: 14n },
         ];
 
         for (const test of tests) {
@@ -317,31 +317,31 @@ describe('evaluator', () => {
             addTwo(3);
         `;
         const evaluated = testEval(input);
-        testIntegerObject(evaluated, 5);
+        testIntegerObject(evaluated, 5n);
     });
 
     test('builtin functions', () => {
         const tests = [
-            { input: 'len("")', expected: 0 },
-            { input: 'len("four")', expected: 4 },
-            { input: 'len("hello world")', expected: 11 },
+            { input: 'len("")', expected: 0n },
+            { input: 'len("four")', expected: 4n },
+            { input: 'len("hello world")', expected: 11n },
             { input: 'len(1)', expected: 'argument to `len` not supported, got=INTEGER' },
             { input: 'len("one", "two")', expected: 'wrong number of arguments. got=2, want=1' },
-            { input: 'len([1, 2, 3])', expected: 3 },
-            { input: 'len([])', expected: 0 },
+            { input: 'len([1, 2, 3])', expected: 3n },
+            { input: 'len([])', expected: 0n },
             { input: 'first([])', expected: NULL },
-            { input: 'first([1, 2, 3])', expected: 1 },
+            { input: 'first([1, 2, 3])', expected: 1n },
             { input: 'last([])', expected: NULL },
-            { input: 'last([1, 2, 3])', expected: 3 },
+            { input: 'last([1, 2, 3])', expected: 3n },
             { input: 'rest([])', expected: NULL },
-            { input: 'rest([1, 2, 3])', expected: [2, 3] },
+            { input: 'rest([1, 2, 3])', expected: [2n, 3n] },
         ];
 
         for (const test of tests) {
             const evaluated = testEval(test.input);
 
             if (evaluated.type() === 'INTEGER') {
-                testIntegerObject(evaluated, test.expected as number);
+                testIntegerObject(evaluated, test.expected as bigint);
             } else if (evaluated.type() === 'NULL') {
                 assert.strictEqual(evaluated, NULL, `object is not NULL. got=${JSON.stringify(evaluated)}`);
             } else if (Array.isArray(test.expected)) {
@@ -361,17 +361,17 @@ describe('evaluator', () => {
         `;
         const evaluated = testEval(input);
 
-        testArrayObject(evaluated, [[1, 2], [1, 2, 3]]);
+        testArrayObject(evaluated, [[1n, 2n], [1n, 2n, 3n]]);
     });
 
     test('array literal', () => {
         const input = '[1, 2 * 2, 3 + 3]';
         const evaluated = testEval(input);
-        assert.ok(evaluated instanceof MonkeyArray, `object not Array. got=${JSON.stringify(evaluated)}`);
+        assert.ok(evaluated instanceof MonkeyArray, `object not Array. got=${evaluated.type()}`);
         assert.strictEqual(evaluated.elements.length, 3, `array has wrong num of elements. got=${evaluated.elements.length}`);
-        testIntegerObject(evaluated.elements[0], 1);
-        testIntegerObject(evaluated.elements[1], 4);
-        testIntegerObject(evaluated.elements[2], 6);
+        testIntegerObject(evaluated.elements[0], 1n);
+        testIntegerObject(evaluated.elements[1], 4n);
+        testIntegerObject(evaluated.elements[2], 6n);
     });
 
     test('hash literals', () => {
@@ -390,13 +390,13 @@ describe('evaluator', () => {
         const evaluated = testEval(input);
         assert.ok(evaluated instanceof MonkeyHash, `object is not Hash. got=${JSON.stringify(evaluated)}`);
 
-        const expected: Array<[HashKey, number]> = [
-            [new MonkeyString('one').hashKey(), 1],
-            [new MonkeyString('er').hashKey(), 2],
-            [new MonkeyString('three').hashKey(), 3],
-            [new MonkeyInteger(4).hashKey(), 4],
-            [TRUE.hashKey(), 5],
-            [FALSE.hashKey(), 6],
+        const expected: Array<[HashKey, bigint]> = [
+            [new MonkeyString('one').hashKey(), 1n],
+            [new MonkeyString('er').hashKey(), 2n],
+            [new MonkeyString('three').hashKey(), 3n],
+            [new MonkeyInteger(4n).hashKey(), 4n],
+            [TRUE.hashKey(), 5n],
+            [FALSE.hashKey(), 6n],
         ];
 
         assert.strictEqual(evaluated.pairs.size, expected.length, `hash has wrong num of pairs. got=${evaluated.pairs.size}`);
@@ -410,21 +410,21 @@ describe('evaluator', () => {
 
     test('array index expression', () => {
         const tests = [
-            { input: '[1, 2, 3][0]', expected: 1 },
-            { input: '[1, 2, 3][1]', expected: 2 },
-            { input: '[1, 2, 3][2]', expected: 3 },
-            { input: 'let i = 0; [1][i];', expected: 1 },
-            { input: '[1, 2, 3][1 + 1];', expected: 3 },
-            { input: 'let myArray = [1, 2, 3]; myArray[2];', expected: 3 },
-            { input: 'let myArray = [1, 2, 3]; myArray[0] + myArray[1] + myArray[2];', expected: 6 },
-            { input: 'let myArray = [1, 2, 3]; let i = myArray[0]; myArray[i];', expected: 2 },
+            { input: '[1, 2, 3][0]', expected: 1n },
+            { input: '[1, 2, 3][1]', expected: 2n },
+            { input: '[1, 2, 3][2]', expected: 3n },
+            { input: 'let i = 0; [1][i];', expected: 1n },
+            { input: '[1, 2, 3][1 + 1];', expected: 3n },
+            { input: 'let myArray = [1, 2, 3]; myArray[2];', expected: 3n },
+            { input: 'let myArray = [1, 2, 3]; myArray[0] + myArray[1] + myArray[2];', expected: 6n },
+            { input: 'let myArray = [1, 2, 3]; let i = myArray[0]; myArray[i];', expected: 2n },
             { input: '[1, 2, 3][3]', expected: null },
             { input: '[1, 2, 3][-1]', expected: null },
         ];
 
         for (const test of tests) {
             const evaluated = testEval(test.input);
-            if (typeof test.expected === 'number') {
+            if (typeof test.expected === 'bigint') {
                 testIntegerObject(evaluated, test.expected);
             } else {
                 testNullObject(evaluated);
@@ -434,18 +434,18 @@ describe('evaluator', () => {
 
     test('hash index expression', () => {
         const tests = [
-            { input: '{"foo": 5}["foo"]', expected: 5 },
+            { input: '{"foo": 5}["foo"]', expected: 5n },
             { input: '{"foo": 5}["bar"]', expected: null },
-            { input: 'let key = "foo"; {"foo": 6}[key]', expected: 6 },
+            { input: 'let key = "foo"; {"foo": 6}[key]', expected: 6n },
             { input: '{}["bar"]', expected: null },
-            { input: '{5: 7}[5]', expected: 7 },
-            { input: '{true: 8}[true]', expected: 8 },
-            { input: '{false: 9}[false]', expected: 9 },
+            { input: '{5: 7}[5]', expected: 7n },
+            { input: '{true: 8}[true]', expected: 8n },
+            { input: '{false: 9}[false]', expected: 9n },
         ];
 
         for (const test of tests) {
             const evaluated = testEval(test.input);
-            if (typeof test.expected === 'number') {
+            if (typeof test.expected === 'bigint') {
                 testIntegerObject(evaluated, test.expected);
             } else {
                 testNullObject(evaluated);

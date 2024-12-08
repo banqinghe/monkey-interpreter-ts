@@ -82,9 +82,9 @@ export class Identifier implements Expression {
 export class IntegerLiteral implements Expression {
     type = 'IntegerLiteral';
     token: Token;
-    value: number;
+    value: string;
 
-    constructor({ token, value }: { token: Token; value: number }) {
+    constructor({ token, value }: { token: Token; value: string }) {
         this.token = token;
         this.value = value;
     }

@@ -19,9 +19,9 @@ function len(...args: MonkeyObject[]): MonkeyObject {
     const argType = arg.type();
 
     if (argType === STRING_OBJ) {
-        return new MonkeyInteger(arg.inspect().length);
+        return new MonkeyInteger(BigInt(arg.inspect().length));
     } else if (argType === ARRAY_OBJ) {
-        return new MonkeyInteger((arg as MonkeyArray).elements.length);
+        return new MonkeyInteger(BigInt((arg as MonkeyArray).elements.length));
     } else {
         return new MonkeyError(`argument to \`len\` not supported, got=${arg.type()}`);
     }
