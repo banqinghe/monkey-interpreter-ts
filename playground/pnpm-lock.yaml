@@ -27,8 +27,8 @@ importers:
         specifier: ^2.5.1
         version: 2.5.1
       monkey-parser:
-        specifier: ^0.1.1
-        version: 0.1.1
+        specifier: ^0.1.2
+        version: 0.1.2
       react:
         specifier: ^18.3.1
         version: 18.3.1
@@ -859,8 +859,8 @@ packages:
     resolution: {integrity: sha512-qOOzS1cBTWYF4BH8fVePDBOO9iptMnGUEZwNc/cMWnTV2nVLZ7VoNWEPHkYczZA0pdoA7dl6e7FL659nX9S2aw==}
     engines: {node: '>=16 || 14 >=14.17'}
 
-  monkey-parser@0.1.1:
-    resolution: {integrity: sha512-q0xLPM4IcOJbq2o918lFhgv71dOJ/axPi+Iu9I0rtv63dR/hGsretqX37wz0sDEwBHU/VIEe3J/RVvrxA6+cLA==}
+  monkey-parser@0.1.2:
+    resolution: {integrity: sha512-2cd/Ftm9CuCgwOmPaZ+3RSkUuIhY8Vr+2sif42aXGbH4ZNmsrFTyo5/o1iGKJU7fWEjfye45axGCfVgQufdYtg==}
     hasBin: true
 
   ms@2.1.3:
@@ -2018,7 +2018,7 @@ snapshots:
 
   minipass@7.1.2: {}
 
-  monkey-parser@0.1.1:
+  monkey-parser@0.1.2:
     dependencies:
       picocolors: 1.1.1
 
