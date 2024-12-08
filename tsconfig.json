@@ -1,14 +1,23 @@
 {
     "compilerOptions": {
-      "target": "ES2023",
-      "lib": ["ES2023"],
-      "moduleResolution": "Bundler",
-      "module": "ESNext",
-      "strict": true,
-      "outDir": "./build",
-      "declaration": true,
-      "emitDeclarationOnly": true,
+        "target": "ES2023",
+        "lib": [
+            "ES2023",
+            "DOM"
+        ],
+        "moduleResolution": "Bundler",
+        "module": "ESNext",
+        "strict": true,
+        "outDir": "./build",
+        "declaration": true,
+        "emitDeclarationOnly": true,
     },
-    "include": ["**/*.ts", "eslint.config.js", "build.config.ts"],
-    "exclude": ["node_modules"]
+    "include": [
+        "**/*.ts",
+        "eslint.config.js",
+        "build.config.ts"
+    ],
+    "exclude": [
+        "node_modules"
+    ]
 }

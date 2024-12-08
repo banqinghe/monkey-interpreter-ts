@@ -108,10 +108,23 @@ function push(...args: MonkeyObject[]): MonkeyObject {
     return new MonkeyArray([args[1]]);
 }
 
+function puts(...args: MonkeyObject[]): MonkeyObject {
+    for (const arg of args) {
+        const output = arg.inspect();
+        console.log(output);
+        if (typeof window !== 'undefined') {
+            // to be used in the playground
+            (window as any)?.monkeyPuts(output);
+        }
+    }
+    return NULL;
+}
+
 export const builtins = new Map<string, MonkeyBuiltinFunction>([
     ['len', new MonkeyBuiltinFunction(len)],
     ['first', new MonkeyBuiltinFunction(first)],
     ['last', new MonkeyBuiltinFunction(last)],
     ['rest', new MonkeyBuiltinFunction(rest)],
     ['push', new MonkeyBuiltinFunction(push)],
+    ['puts', new MonkeyBuiltinFunction(puts)],
 ]);
